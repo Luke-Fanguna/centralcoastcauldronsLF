@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src.api import auth
 
 with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql_to_execute))
+        result = connection.execute(sqlalchemy.text("SELECT * FROM global"))
 
 router = APIRouter(
     prefix="/barrels",
