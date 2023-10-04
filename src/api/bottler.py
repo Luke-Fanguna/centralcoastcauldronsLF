@@ -5,8 +5,12 @@ from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
 
+sql = """
+SELECT gold, red_ml FROM globals
+"""
+
 with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text('SELECT * FROM global'))
+        result = connection.execute(sqlalchemy.text(sql))
 
 router = APIRouter(
     prefix="/bottler",

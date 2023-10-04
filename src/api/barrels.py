@@ -4,8 +4,15 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 
+sql = """
+SELECT gold, red_ml FROM globals
+"""
+
 with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("SELECT * FROM global"))
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row = result.first()
+        print(f"gold {first_row.gold}")
+        print(f"red ml {first_row.red_ml}")
 
 router = APIRouter(
     prefix="/barrels",
