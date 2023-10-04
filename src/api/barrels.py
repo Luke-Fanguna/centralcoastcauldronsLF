@@ -4,15 +4,21 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
 
+#goal: can only sell a barrel if total number of potions is less than 10
+
 sql = """
-SELECT gold, red_ml FROM global_inventory
+SELECT gold, num_red_potions, num_red_ml FROM global_inventory
 """
 
 with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(sql))
         first_row = result.first()
-        print(f"gold {first_row.gold}")
-        print(f"red ml {first_row.red_ml}")
+        
+        potions = first_row.num_red_potions
+        ml = first_row.num_red_ml
+        gold = first_row.gold
+
+
 
 router = APIRouter(
     prefix="/barrels",
@@ -41,10 +47,16 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
-
+    amt = 0
+    
+    if (potions < 10):
+        amt = 1
+        ml += 500
+        gold -= 100
+        connection.execute(sqlalchemy.text("UPDATE global_inventory\nSET gold = " + str(gold) + "\nSET num_red_ml = " + str(ml) + ";"))
     return [
         {
             "sku": "SMALL_RED_BARREL",
-            "quantity": 1,
+            "quantity": amt,
         }
     ]
