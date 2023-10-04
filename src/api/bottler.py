@@ -10,7 +10,7 @@ from src.api import auth
 sql = """
 SELECT num_red_ml, num_red_potions FROM global_inventory
 """
-
+ml = 0
 with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(sql))
         first_row = result.first()
@@ -41,7 +41,7 @@ def get_bottle_plan():
     """
     Go from barrel to bottle.
     """
-    ml -= 500
+    ml -= 350
     potions += 5
     
     # Each bottle has a quantity of what proportion of red, blue, and
