@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.api import auth
 
 sql = """
-SELECT gold, red_ml FROM globals
+SELECT gold, red_ml FROM global_inventory
 """
 
 with db.engine.begin() as connection:
