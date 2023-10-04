@@ -14,7 +14,6 @@ with db.engine.begin() as connection:
         potions = first_row.num_red_potions
 
 
-
 router = APIRouter()
 
 
@@ -31,7 +30,7 @@ def get_catalog():
                 "sku": "RED_POTION_0",
                 "name": "red potion",
                 "quantity": potions,
-                "price": 50,
+                "price": 20,
                 "potion_type": [100, 0, 0, 0],
             }
         ]

@@ -52,7 +52,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     if (potions < 10):
         amt = 1
         ml += 500
-        gold -= 100
+        gold -= 20
         connection.execute(sqlalchemy.text("UPDATE global_inventory\nSET gold = " + str(gold) + "\nSET num_red_ml = " + str(ml) + ";"))
     return [
         {

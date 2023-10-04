@@ -55,5 +55,5 @@ class CartCheckout(BaseModel):
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
     """ """
-    connection.execute("UPDATE global_inventory\nSET num_red_potions = " + str(potions - 1) + "\nSET gold = " + str(gold + 50) ";")
+    connection.execute("UPDATE global_inventory\nSET num_red_potions = " + str(potions - 1) + "\nSET gold = " + str(gold + 50) + ";")
     return {"total_potions_bought": 1, "total_gold_paid": 50}

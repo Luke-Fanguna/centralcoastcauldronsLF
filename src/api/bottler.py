@@ -32,7 +32,7 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
-
+    
     return "OK"
 
 # Gets called 4 times a day
