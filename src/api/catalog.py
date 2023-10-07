@@ -9,11 +9,9 @@ SELECT num_red_potions FROM global_inventory
 """
 
 with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
-        potions = first_row.num_red_potions
-
-
+            result = connection.execute(sqlalchemy.text(sql))
+            first_row = result.first()
+            
 router = APIRouter()
 
 
@@ -22,14 +20,14 @@ def get_catalog():
     """
     Each unique item combination must have only a single price.
     """
-
+    
     # Can return a max of 20 items.
 
     return [
             {
                 "sku": "RED_POTION_0",
                 "name": "red potion",
-                "quantity": potions,
+                "quantity": 0,
                 "price": 20,
                 "potion_type": [100, 0, 0, 0],
             }
