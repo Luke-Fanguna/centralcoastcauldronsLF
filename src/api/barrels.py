@@ -63,21 +63,26 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
 
-    choice = wholesale_catalog[0]
+    choice = None
     pots = first_row.num_red_potions
-
+    gold = first_row.gold
     purchased = []
+    
     if pots < 10:
         for barrel in wholesale_catalog:
-            if barrel.price < choice.price and barrel.ml_per_barrel > choice.ml_per_barrel:
-                choice = barrel      
-    
-        purchased = [
+            if choice is None:
+                if barrel.price < gold:
+                    choice = barrel
+            else:
+                if barrel.price < choice.price and barrel.ml_per_barrel > choice.ml_per_barrel:
+                    choice = barrel      
+        if choice is not None:
+            purchased = [
                         {
-                        "sku": "BIG_RED",
+                        "sku": choice.sku,
                         "quantity": 1
                         }
-                    ]
+                        ]
     
     return purchased
             
