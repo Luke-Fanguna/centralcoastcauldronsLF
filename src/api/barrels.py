@@ -44,24 +44,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
     print(wholesale_catalog)
     
-    # sku = ""
-    # min_price = wholesale_catalog[0]
-    quantity = 0
-    # barrel = wholesale_catalog[0]
-
-    # for i in range(1,wholesale_catalog):
-    #     print(sku)
-    #     if min_price < wholesale_catalog[i].price:
-    #         sku = wholesale_catalog[i].sku
-    #         quantity = wholesale_catalog[i].quantity
-    #         barrel = wholesale_catalog[i]
-
-    # ml = barrel.ml_per_barrel * barrel.quantity
+    
 
     
     return [
         {
             "sku": "SMALL_RED_BARREL",
-            "quantity": quantity
+            "quantity": 1
         }
     ]

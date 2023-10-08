@@ -29,7 +29,7 @@ class PotionInventory(BaseModel):
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
-    print("potions",potions_delivered)
+    print(potions_delivered)
 
     return "OK"
 
@@ -45,11 +45,12 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     # Initial logic: bottle all barrels into red potions.
+
     pots = 0
     if (first_row.num_red_ml == 100):
         pots, ml = first_row.num_red_ml / 500, first_row.num_red_ml % 500
         print(pots,ml)
-    # connection.execute(sqlalchemy.text("UPDATE global_inventory\nSET num_red_ml = " + ml + "\nWHERE id = 0"))
+
 
     return [
             {
