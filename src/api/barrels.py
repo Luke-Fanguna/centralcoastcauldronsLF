@@ -29,24 +29,28 @@ class Barrel(BaseModel):
     price: int
 
     quantity: int
+    
 
 @router.post("/deliver")
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
 
-    quantity = barrels_delivered.quantity
-    ml += barrels_delivered.num_red_ml * quantity
-    gold -= barrels_delivered.gold * quantity
+    gold = 0
+    ml = 0
+
+    for barrel in barrels_delivered:
+        gold += barrel.price
+        ml += barrel.ml_per_barrel
 
     sql = """
         UPDATE global_inventory
         SET 
             gold = {},
-            num_red_ml = {},
-            num_red_potions = {}
+            num_red_ml = {}
         WHERE id = 0;
-    """.format(gold,ml,quantity)
+    """.format(first_row.gold - gold,
+               first_row.num_red_ml + ml)
     
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(sql))
@@ -58,18 +62,23 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
-    
+
+    choice = wholesale_catalog[0]
     pots = first_row.num_red_potions
-    gold = first_row.gold
+
+    purchased = []
+    if pots < 10:
+        for barrel in wholesale_catalog:
+            if barrel.price < choice.price and barrel.ml_per_barrel > choice.ml_per_barrel:
+                choice = barrel      
     
-    if pots < 10 and gold > wholesale_catalog.gold:
-            return [
-                {
-                "sku": "BIG_RED",
-                "quantity": 1
-                }
-            ]
-    else:
-        return []
+        purchased = [
+                        {
+                        "sku": "BIG_RED",
+                        "quantity": 1
+                        }
+                    ]
+    
+    return purchased
             
 
