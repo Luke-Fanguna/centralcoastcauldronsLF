@@ -13,6 +13,9 @@ sql = """
 with db.engine.begin() as connection:
     result = connection.execute(sqlalchemy.text(sql))
     first_row = result.first()
+    pots = first_row.num_red_potions
+    ml = first_row.num_red_ml
+    g = first_row.gold
 
 
 router = APIRouter(
@@ -35,6 +38,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
 
+    
+    
     return "OK"
 
 # Gets called once a day
@@ -43,13 +48,17 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     
     print(wholesale_catalog)
-    
-    
+
+    quantity = 0
+    if pots < 10:
+        if g > wholesale_catalog.price:
+            quantity = g // wholesale_catalog.price
+            g -= quantity * wholesale_catalog.price
 
     
     return [
         {
-            "sku": "SMALL_RED_BARREL",
-            "quantity": 1
+            "sku": "BIG_RED",
+            "quantity": quantity
         }
     ]
