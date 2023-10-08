@@ -13,9 +13,6 @@ sql = """
 with db.engine.begin() as connection:
     result = connection.execute(sqlalchemy.text(sql))
     first_row = result.first()
-    pots = first_row.num_red_potions
-    ml = first_row.num_red_ml
-    g = first_row.gold
 
 
 router = APIRouter(
@@ -38,7 +35,21 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
 
+    quantity = barrels_delivered.quantity
+    ml += barrels_delivered.num_red_ml * quantity
+    gold -= barrels_delivered.gold * quantity
+
+    sql = """
+        UPDATE global_inventory
+        SET 
+            gold = {},
+            num_red_ml = {},
+            num_red_potions = {}
+        WHERE id = 0;
+    """.format(gold,ml,quantity)
     
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(sql))
     
     return "OK"
 
@@ -46,19 +57,19 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 @router.post("/plan")
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
-    
     print(wholesale_catalog)
-
-    quantity = 0
-    if pots < 10:
-        if g > wholesale_catalog.price:
-            quantity = g // wholesale_catalog.price
-            g -= quantity * wholesale_catalog.price
-
     
-    return [
-        {
-            "sku": "BIG_RED",
-            "quantity": quantity
-        }
-    ]
+    pots = first_row.num_red_potions
+    gold = first_row.gold
+    
+    if pots < 10 and gold > wholesale_catalog.price:
+            return [
+                {
+                "sku": "BIG_RED",
+                "quantity": 1
+                }
+            ]
+    else:
+        return [{}]
+            
+
