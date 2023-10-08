@@ -62,7 +62,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     pots = first_row.num_red_potions
     gold = first_row.gold
     
-    if pots < 10 and gold > wholesale_catalog.price:
+    if pots < 10 and gold > wholesale_catalog.gold:
             return [
                 {
                 "sku": "BIG_RED",
