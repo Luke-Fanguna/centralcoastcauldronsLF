@@ -34,11 +34,6 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     pots = potions_delivered[0].quantity
     ml = 100 * pots
     
-    print(pots,ml)
-    
-    print(first_row.num_red_potions,first_row.num_red_ml)
-    
-    
     
     sql = """
         UPDATE global_inventory
@@ -69,7 +64,6 @@ def get_bottle_plan():
     pots = 0
     if (first_row.num_red_ml >= 100):
         pots, ml = first_row.num_red_ml / 100, first_row.num_red_ml % 100
-        print(pots,ml)
 
     return [
             {
