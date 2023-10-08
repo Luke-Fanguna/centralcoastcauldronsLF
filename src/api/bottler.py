@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.api import auth
 
 # always mix potions
-# 500ml and 30g
+# 500ml a barrel, 100ml a potion, and 30g a barrel
 sql = """
 SELECT num_red_ml, num_red_potions FROM global_inventory
 """
@@ -30,7 +30,27 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
-
+    
+    pots = potions_delivered[0].quantity
+    ml = 100 * pots
+    
+    print(pots,ml)
+    
+    print(first_row.num_red_potions,first_row.num_red_ml)
+    
+    
+    
+    sql = """
+        UPDATE global_inventory
+        SET 
+            num_red_ml = {},
+            num_red_potions = {}
+        WHERE id = 0;
+        """.format(first_row.num_red_ml - ml, first_row.num_red_potions + pots)
+    
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(sql))
+        
     return "OK"
 
 # Gets called 4 times a day
@@ -47,10 +67,9 @@ def get_bottle_plan():
     # Initial logic: bottle all barrels into red potions.
 
     pots = 0
-    if (first_row.num_red_ml == 100):
-        pots, ml = first_row.num_red_ml / 500, first_row.num_red_ml % 500
+    if (first_row.num_red_ml >= 100):
+        pots, ml = first_row.num_red_ml / 100, first_row.num_red_ml % 100
         print(pots,ml)
-
 
     return [
             {

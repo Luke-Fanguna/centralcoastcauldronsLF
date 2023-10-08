@@ -43,14 +43,15 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         gold += barrel.price
         ml += barrel.ml_per_barrel
 
+    print(gold,ml)
+
     sql = """
         UPDATE global_inventory
         SET 
             gold = {},
             num_red_ml = {}
         WHERE id = 0;
-    """.format(first_row.gold - gold,
-               first_row.num_red_ml + ml)
+        """.format(first_row.gold - gold,first_row.num_red_ml + ml)
     
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(sql))
