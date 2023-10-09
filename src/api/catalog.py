@@ -20,15 +20,50 @@ def get_catalog():
     """
     Each unique item combination must have only a single price.
     """
-    pots = first_row.num_red_potions
+
     # Can return a max of 20 items.
 
     return [
             {
-                "sku": "RED_POTION_0",
+                "sku": "RED_POT",
                 "name": "red potion",
-                "quantity": pots,
+                "quantity": 1,
                 "price": 20,
                 "potion_type": [100, 0, 0, 0],
+            },
+            {
+                "sku": "BIG_RED",
+                "name": "red barrel",
+                "quantity": 1,
+                "price": 50,
+                "potion_type": [100, 0, 0, 0],
+            },
+            {
+                "sku": "GREEN_POT",
+                "name": "green potion",
+                "quantity": 1,
+                "price": 30,
+                "potion_type": [0, 100, 0, 0],
+            },
+            {
+                "sku": "BIG_GREEN",
+                "name": "green barrel",
+                "quantity": 1,
+                "price": 70,
+                "potion_type": [0, 100, 0, 0],
+            },
+            {
+                "sku": "BLUE_POT",
+                "name": "blue potion",
+                "quantity": 1,
+                "price": 30,
+                "potion_type": [0, 0, 100, 0],
+            },
+            {
+                "sku": "BIG_BLUE",
+                "name": "blue barrel",
+                "quantity": 1,
+                "price": 70,
+                "potion_type": [0, 0, 100, 0],
             }
         ]
