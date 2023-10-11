@@ -22,8 +22,14 @@ def get_catalog():
     """
 
     # Can return a max of 20 items.
-
     return [
+            {
+                "sku": "MINI_RED_BARREL",
+                "name": "mini red barrel",
+                "quantity": 1,
+                "price": 60,
+                "potion_type": [1, 0, 0, 0],
+            },
             {
                 "sku": "RED_POT",
                 "name": "red potion",
@@ -32,38 +38,73 @@ def get_catalog():
                 "potion_type": [100, 0, 0, 0],
             },
             {
-                "sku": "BIG_RED",
+                "sku": "SMALL_RED_BARREL",
                 "name": "red barrel",
+                "quantity": 10,
+                "price": 100,
+                "potion_type": [1, 0, 0, 0],
+            },
+            {
+                "sku": "MEDIUM_RED_BARREL",
+                "name": "red barrel",
+                "quantity": 10,
+                "price": 250,
+                "potion_type": [1, 0, 0, 0],
+            },
+            {
+                "sku": "MINI_GREEN_BARREL",
+                "name": "mini green barrel",
                 "quantity": 1,
-                "price": 50,
-                "potion_type": [100, 0, 0, 0],
+                "price": 60,
+                "potion_type": [0, 1, 0, 0],
             },
             {
                 "sku": "GREEN_POT",
                 "name": "green potion",
                 "quantity": 1,
-                "price": 30,
+                "price": 1,
                 "potion_type": [0, 100, 0, 0],
             },
             {
-                "sku": "BIG_GREEN",
-                "name": "green barrel",
+                "sku": "SMALL_GREEN_BARREL",
+                "name": "small green barrel",
+                "quantity": 10,
+                "price": 100,
+                "potion_type": [0, 1, 0, 0],
+            },
+            {
+                "sku": "MEDIUM_GREEN_BARREL",
+                "name": "medium green barrel",
+                "quantity": 10,
+                "price": 250,
+                "potion_type": [0, 1, 0, 0],
+            },
+            {
+                "sku": "MINI_BLUE_BARREL",
+                "name": "mini blue barrel",
                 "quantity": 1,
-                "price": 70,
-                "potion_type": [0, 100, 0, 0],
+                "price": 60,
+                "potion_type": [0, 0, 1, 0],
             },
             {
                 "sku": "BLUE_POT",
                 "name": "blue potion",
                 "quantity": 1,
-                "price": 30,
+                "price": 1,
                 "potion_type": [0, 0, 100, 0],
             },
             {
-                "sku": "BIG_BLUE",
-                "name": "blue barrel",
-                "quantity": 1,
-                "price": 70,
-                "potion_type": [0, 0, 100, 0],
-            }
+                "sku": "SMALL_BLUE_BARREL",
+                "name": "small blue barrel",
+                "quantity": 10,
+                "price": 120,
+                "potion_type": [0, 0, 1, 0],
+            },
+            {
+                "sku": "MEDIUM_BLUE_BARREL",
+                "name": "medium blue barrel",
+                "quantity": 10,
+                "price": 300,
+                "potion_type": [0, 0, 1, 0],
+            },
         ]
