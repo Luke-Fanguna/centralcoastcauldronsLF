@@ -6,12 +6,13 @@ from src.api import auth
 import math
 
 sql = """
-SELECT num_red_ml, num_red_potions, gold FROM global_inventory
-"""
+        SELECT *
+        FROM global_inventory
+        """
 
 with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text(sql))
-            first_row = result.first()
+            f = result.first()
 
 router = APIRouter(
     prefix="/audit",
@@ -21,9 +22,12 @@ router = APIRouter(
 
 @router.get("/inventory")
 def get_inventory():
-    """ """
+    
     print("hello")  
-    return {"number_of_potions": 0, "ml_in_barrels": 0, "gold": 0}
+    potions = f.num_red_potions + f.num_green_potions + f.num_blue_potions
+    ml = f.num_red_ml + f.num_green_ml + f.num_blue_ml
+    gold = f.gold
+    return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
 
 class Result(BaseModel):
     gold_match: bool
