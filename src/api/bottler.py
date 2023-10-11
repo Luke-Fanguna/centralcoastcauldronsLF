@@ -78,6 +78,7 @@ def get_bottle_plan():
     poss_barrel = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml]
     pot_type = [[100,0,0,0],[0,100,0,0],[0,0,100,0]]
     out = []
+    pots = 0
     c = 0
     for pot in poss_barrel:
         if (pot >= 100):
