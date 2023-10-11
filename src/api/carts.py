@@ -4,17 +4,6 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 
-sql = """
-SELECT num_red_potions, gold FROM global_inventory
-"""
-
-cart = {}
-
-with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
-        potions = first_row.num_red_potions
-        gold = first_row.gold
 
 router = APIRouter(
     prefix="/carts",
@@ -28,16 +17,37 @@ class NewCart(BaseModel):
 
 @router.post("/")
 def create_cart(new_cart: NewCart):
-    """ """
+    
     cart_id = int(new_cart.customer)
-    cart[cart_id] = {}
+    sql = """ 
+    UPDATE carts
+    SET 
+        cart_id = {}
+    """.format(cart_id)
+    
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row = result.first()
+    
     return {"cart_id": cart_id}
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
-    """ """
-    return {}
+    sql = """
+    SELECT item_sku, quantity, cart_item 
+    FROM carts
+    WHERE cart_id = {};
+    """.format(str(cart_id))
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row = result.first()
+
+    return {
+        "item_sku" : first_row.item_sku,
+        "quantity" : first_row.quantity,
+        "cart_item" : first_row.cart_item
+    }
 
 
 class CartItem(BaseModel):
@@ -46,8 +56,17 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-    """ """
-    cart[cart_id][item_sku] = cart_item.quantity
+    sql = """
+    UPDATE carts
+    SET 
+        item_sku = {},
+        cart_item = {}
+    WHERE
+        cart_id = {};
+        """.format(item_sku,cart_item,cart_id)
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row = result.first()
     return "OK"
 
 
@@ -56,23 +75,16 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    """ """
-    tot_pot = 0
-    tot_paid = 0
-    if potions != 0:
-        for items in cart[cart_id]:
-            tot_pot += cart[cart_id][items] 
-        tot_paid = int(cart_checkout.payment)
-    
     sql = """
-        UPDATE global_inventory
-        SET 
-            num_red_potions = {},
-            gold = {}
-        WHERE id = 0;
-    """.format(potions - tot_pot,gold + tot_paid)
-    
+    SELECT quantity 
+    FROM carts
+    WHERE cart_id = {}
+    """
     with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(sql))
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row = result.first()
+        
+    tot_pot = first_row.quantity
+    tot_paid = int(cart_checkout.payment)
     
     return {"total_potions_bought": tot_pot, "total_gold_paid": tot_paid}
