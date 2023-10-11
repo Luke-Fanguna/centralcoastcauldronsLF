@@ -8,7 +8,7 @@ from src.api import auth
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
 sql = """
-SELECT num_red_ml, num_red_potions FROM global_inventory
+SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
 """
 
 with db.engine.begin() as connection:
@@ -31,20 +31,35 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     """ """
     print(potions_delivered)
     
-    pots = potions_delivered[0].quantity
-    ml = 100 * pots
-    
-    
-    sql = """
+    for potion in potions_delivered:
+        if potion.potion_type == [100,0,0,0]:
+            quantity, ml = first_row.num_red_ml // 100, first_row.num_red_ml % 100
+            potion_name = "red"
+            pots = potions_delivered[0].quantity
+        elif potion.potion_type == [0,100,0,0]:
+            quantity, ml = first_row.num_green_ml // 100, first_row.num_green_ml % 100
+            potion_name = "green"
+            pots = potions_delivered[0].quantity
+        elif potion.potion_type == [0,0,100,0]:
+            quantity, ml = first_row.num_blue_ml // 100, first_row.num_blue_ml % 100
+            potion_name = "blue"
+            pots = potions_delivered[0].quantity
+        
+        sql = """
         UPDATE global_inventory
         SET 
-            num_red_ml = {},
-            num_red_potions = {}
+            num_{}_ml = {},
+            num_{}_potions = {}
         WHERE id = 0;
-        """.format(first_row.num_red_ml - ml, first_row.num_red_potions + pots)
+        """.format(potion_name, ml,
+                   potion_name, quantity + pots)
+        print(sql)
     
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(sql))
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text(sql))
+    
+    
+    
         
     return "OK"
 
@@ -60,14 +75,20 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     # Initial logic: bottle all barrels into red potions.
-
-    pots = 0
-    if (first_row.num_red_ml >= 100):
-        pots, ml = first_row.num_red_ml / 100, first_row.num_red_ml % 100
-
-    return [
+    poss_barrel = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml]
+    pot_type = [[100,0,0,0],[0,100,0,0],[0,0,100,0]]
+    out = []
+    c = 0
+    for pot in poss_barrel:
+        if (pot >= 100):
+            pots = pot / 100
+        out.append(
             {
-                "potion_type": [100, 0, 0, 0],
+                "potion_type": pot_type[c],
                 "quantity": pots
             }
-        ]
+        )
+        c+=1
+            
+
+    return out
