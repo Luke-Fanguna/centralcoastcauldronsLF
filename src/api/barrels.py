@@ -40,9 +40,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         "green" : first_row.num_green_ml,
         "blue" : first_row.num_blue_ml
     }
-    gold,ml = 0,0
 
     for barrel in barrels_delivered:
+        gold,ml = 0,0
         if barrel.potion_type == [1,0,0,0]:
             ml_type = "red"
         elif barrel.potion_type == [0,1,0,0]:
@@ -97,6 +97,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     }
                 )
     
+    print(first_row.gold)
     return purchased
             
 
