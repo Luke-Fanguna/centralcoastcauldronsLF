@@ -75,7 +75,7 @@ def get_catalog():
     "sku": "MINI_GREEN_BARREL",
     "name": "mini green barrel",
     "quantity": 1,
-    "price": 60,
+    "price": 1,
     "potion_type": [
       0,
       1,
@@ -99,7 +99,7 @@ def get_catalog():
     "sku": "SMALL_GREEN_BARREL",
     "name": "small green barrel",
     "quantity": 10,
-    "price": 100,
+    "price": 1,
     "potion_type": [
       0,
       1,
@@ -111,7 +111,7 @@ def get_catalog():
     "sku": "MEDIUM_GREEN_BARREL",
     "name": "medium green barrel",
     "quantity": 10,
-    "price": 250,
+    "price": 1,
     "potion_type": [
       0,
       1,
@@ -123,7 +123,7 @@ def get_catalog():
     "sku": "MINI_BLUE_BARREL",
     "name": "mini blue barrel",
     "quantity": 1,
-    "price": 60,
+    "price": 1,
     "potion_type": [
       0,
       0,
@@ -147,7 +147,7 @@ def get_catalog():
     "sku": "SMALL_BLUE_BARREL",
     "name": "small blue barrel",
     "quantity": 10,
-    "price": 120,
+    "price": 1,
     "potion_type": [
       0,
       0,
@@ -159,7 +159,7 @@ def get_catalog():
     "sku": "MEDIUM_BLUE_BARREL",
     "name": "medium blue barrel",
     "quantity": 10,
-    "price": 300,
+    "price": 1,
     "potion_type": [
       0,
       0,
