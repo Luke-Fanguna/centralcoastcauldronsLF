@@ -10,6 +10,12 @@ router = APIRouter(
     tags=["cart"],
     dependencies=[Depends(auth.get_api_key)],
 )
+sql = """
+    SELECT gold FROM global_inventory
+"""
+with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql))
+        first_row2 = result.first()
 
 
 class NewCart(BaseModel):
@@ -18,16 +24,19 @@ class NewCart(BaseModel):
 @router.post("/")
 def create_cart(new_cart: NewCart):
     
-    cart_id = int(new_cart.customer)
+    cart_id = 0
+    for char in new_cart.customer:
+        cart_id += ord(char)
     sql = """ 
     UPDATE carts
     SET 
+        customer = '{}',
         cart_id = {}
-    """.format(cart_id)
+    WHERE id = 1;
+    """.format(new_cart.customer,cart_id)
     
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
     
     return {"cart_id": cart_id}
 
@@ -35,7 +44,7 @@ def create_cart(new_cart: NewCart):
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
     sql = """
-    SELECT item_sku, quantity, cart_item 
+    SELECT item_sku, quantity
     FROM carts
     WHERE cart_id = {};
     """.format(str(cart_id))
@@ -59,14 +68,14 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     sql = """
     UPDATE carts
     SET 
-        item_sku = {},
-        cart_item = {}
+        item_sku = '{}',
+        quantity = {}
     WHERE
         cart_id = {};
-        """.format(item_sku,cart_item,cart_id)
+        """.format(item_sku,cart_item.quantity,cart_id)
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
+
     return "OK"
 
 
@@ -79,12 +88,22 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
     SELECT quantity 
     FROM carts
     WHERE cart_id = {}
-    """
+    """.format(cart_id,)
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(sql))
         first_row = result.first()
         
+        
     tot_pot = first_row.quantity
     tot_paid = int(cart_checkout.payment)
+    
+    sql = """
+    UPDATE global_inventory
+    SET
+        gold = {}
+    WHERE id = 0;
+    """.format(first_row2.gold + tot_paid)
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(sql))
     
     return {"total_potions_bought": tot_pot, "total_gold_paid": tot_paid}
