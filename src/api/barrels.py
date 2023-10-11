@@ -35,26 +35,32 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
-
-    gold = 0
-    ml = 0
+    update_ml = {
+        "red" : first_row.num_red_ml,
+        "green" : first_row.num_green_ml,
+        "blue" : first_row.num_blue_ml
+    }
+    gold,ml = 0,0
 
     for barrel in barrels_delivered:
+        if barrel.potion_type == [1,0,0,0]:
+            ml_type = "red"
+        elif barrel.potion_type == [0,1,0,0]:
+            ml_type = "green"
+        elif barrel.potion_type == [0,0,1,0]:
+            ml_type = "blue"
         gold += barrel.price
         ml += barrel.ml_per_barrel
-
-    print(gold,ml)
-
-    sql = """
-        UPDATE global_inventory
-        SET 
-            gold = {},
-            num_red_ml = {}
-        WHERE id = 0;
-        """.format(first_row.gold - gold,first_row.num_red_ml + ml)
-    
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(sql))
+        sql = """
+            UPDATE global_inventory
+            SET 
+                gold = {},
+                num_{}_ml = {}
+            WHERE id = 0;
+            """.format(first_row.gold - gold,ml_type,update_ml[ml_type] + ml)
+        print(sql)
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text(sql))
     
     return "OK"
 
@@ -63,18 +69,33 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     """ """
     print(wholesale_catalog)
-    pots = [first_row.num_red_potions,first_row.num_green_potions,first_row.num_blue_potions]
-
-
-
     
-    
-    purchased = [
-                {
-                "sku": "string",
-                "quantity": 1
-                }
-                ]
+    purchased = []
+    for barrel in wholesale_catalog:
+        if barrel.potion_type == [1,0,0,0]:
+            if first_row.num_red_potions < 10 and barrel.price < first_row.gold:
+                purchased.append(
+                    {
+                        "sku": barrel.sku,
+                        "quantity": barrel.quantity
+                    }
+                )
+        elif barrel.potion_type == [0,1,0,0]:
+            if first_row.num_green_potions < 10 and barrel.price < first_row.gold:
+                purchased.append(
+                    {
+                        "sku": barrel.sku,
+                        "quantity": barrel.quantity        
+                    }
+                )
+        elif barrel.potion_type == [0,0,1,0]:
+            if first_row.num_blue_potions < 10 and barrel.price < first_row.gold:
+                purchased.append(
+                    {
+                        "sku": barrel.sku,
+                        "quantity": barrel.quantity        
+                    }
+                )
     
     return purchased
             

@@ -25,10 +25,10 @@ def get_catalog():
     return [
             {
                 "sku": "MINI_RED_BARREL",
-                "ml_per_barrel": 200,
-                "potion_type": [1, 0, 0, 0],
+                "name": "mini red barrel",
+                "quantity": 1,
                 "price": 60,
-                "quantity": 1
+                "potion_type": [1, 0, 0, 0],
             },
             {
                 "sku": "RED_POT",
