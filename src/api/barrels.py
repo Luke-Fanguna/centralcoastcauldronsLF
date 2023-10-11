@@ -50,7 +50,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         elif barrel.potion_type == [0,0,1,0]:
             ml_type = "blue"
         gold += barrel.price
-        ml += barrel.ml_per_barrel
+        ml += barrel.ml_per_barrel * barrel.quantity
         sql = """
             UPDATE global_inventory
             SET 

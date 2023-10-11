@@ -82,7 +82,7 @@ def get_bottle_plan():
     for pot in poss_barrel:
         pots = 0
         if (pot >= 100):
-            pots = pot / 100
+            pots = pot // 100
         out.append(
             {
                 "potion_type": pot_type[c],
