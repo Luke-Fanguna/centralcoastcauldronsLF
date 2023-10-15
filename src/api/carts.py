@@ -4,59 +4,52 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 
-
+customer = ""
+cart_id = 0
 router = APIRouter(
     prefix="/carts",
     tags=["cart"],
     dependencies=[Depends(auth.get_api_key)],
 )
-sql = """
-    SELECT gold FROM global_inventory
-"""
-with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row2 = result.first()
 
 
 class NewCart(BaseModel):
     customer: str
 
+
 @router.post("/")
 def create_cart(new_cart: NewCart):
-    
-    cart_id = 0
-    for char in new_cart.customer:
-        cart_id += ord(char)
-    sql = """ 
-    UPDATE carts
-    SET 
-        customer = '{}',
-        cart_id = {}
-    WHERE id = 1;
-    """.format(new_cart.customer,cart_id)
-    
+    """ """
+    global cart_id,customer
+    cart_id += 1
+    customer = new_cart.customer
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-    
+        connection.execute(
+            sqlalchemy.text("""
+            INSERT INTO carts 
+            (cart_id, customer)
+            VALUES
+            (:cart_id, :customer)
+            """),[{"cart_id" : cart_id, "customer" : customer}])
     return {"cart_id": cart_id}
 
 
 @router.get("/{cart_id}")
 def get_cart(cart_id: int):
-    sql = """
-    SELECT item_sku, quantity
-    FROM carts
-    WHERE cart_id = {};
-    """.format(str(cart_id))
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
 
-    return {
-        "item_sku" : first_row.item_sku,
-        "quantity" : first_row.quantity,
-        "cart_item" : first_row.cart_item
-    }
+    cart = []
+    with db.engine.begin() as connection:
+        result = connection.execute(
+            sqlalchemy.text("""
+            SELECT * FROM carts
+            WHERE cart_id = :cart_id;
+            """),[{"cart_id" : cart_id}])
+    for i in result:
+        cart.append({
+            "sku" : i[3],
+            "quantity" : i[4]
+        })
+    return cart
 
 
 class CartItem(BaseModel):
@@ -65,17 +58,41 @@ class CartItem(BaseModel):
 
 @router.post("/{cart_id}/items/{item_sku}")
 def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
-    sql = """
-    UPDATE carts
-    SET 
-        item_sku = '{}',
-        quantity = {}
-    WHERE
-        cart_id = {};
-        """.format(item_sku,cart_item.quantity,cart_id)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
+        result = connection.execute(sqlalchemy.text(
+        """
+        SELECT sku, customer FROM carts
+        WHERE cart_id = :cart_id;
+        """
+        ),[{"cart_id" : cart_id}])
+        
+        for contents in result: 
 
+            cond = contents[0]
+            name = contents[1]
+
+        if cond is None:
+            print("new")
+            connection.execute(sqlalchemy.text(
+            """
+            UPDATE carts
+            SET
+                quantity = :quantity,
+                sku = :sku
+            WHERE cart_id = :cart_id AND customer = :customer;
+            """
+            ),[{"quantity" : cart_item.quantity, "cart_id" : cart_id, "sku" : item_sku, "customer" : name}])
+        else:
+            print("old")
+            connection.execute(sqlalchemy.text(
+            """
+            UPDATE carts
+            SET
+                quantity = :quantity
+            WHERE cart_id = :cart_id AND sku = :sku AND customer = :customer;
+            """
+            ),[{"quantity" : cart_item.quantity, "cart_id" : cart_id, "sku" : item_sku, "customer" : name}] )
+                
     return "OK"
 
 
@@ -84,26 +101,31 @@ class CartCheckout(BaseModel):
 
 @router.post("/{cart_id}/checkout")
 def checkout(cart_id: int, cart_checkout: CartCheckout):
-    sql = """
-    SELECT quantity 
-    FROM carts
-    WHERE cart_id = {}
-    """.format(cart_id,)
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
+        result = connection.execute(sqlalchemy.text("""
+            SELECT * FROM carts
+            WHERE cart_id = :cart_id;
+            """
+            ),[{"cart_id":cart_id}])
+
+        for i in result:
+            print(i)
+            sku = i[3]
+            quantity = i[4]
+            
+        cost = connection.execute(sqlalchemy.text("""
+            SELECT cost FROM potions_table
+            WHERE sku = :sku;
+            """
+            ),[{"sku" : sku}])
         
-        
-    tot_pot = first_row.quantity
-    tot_paid = int(cart_checkout.payment)
-    
-    sql = """
-    UPDATE global_inventory
-    SET
-        gold = {}
-    WHERE id = 0;
-    """.format(first_row2.gold + tot_paid)
-    with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-    
-    return {"total_potions_bought": tot_pot, "total_gold_paid": tot_paid}
+        connection.execute(sqlalchemy.text("""
+            UPDATE potions_table
+            
+            WHERE sku = :sku;
+            """
+            ),[{"sku" : sku}])
+        for val in cost:
+            price = val[0]
+        print(cart_checkout.payment)
+    return {"total_potions_bought": quantity, "total_gold_paid": price * quantity}

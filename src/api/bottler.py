@@ -55,9 +55,27 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                 num_green_ml = :green_ml,
                 num_blue_potions = :blue_pots,
                 num_blue_ml = :blue_ml
-                                            """),[{"red_ml" : red_ml,"red_pots" : red_pots,"green_ml" : green_ml,"green_pots" : green_pots,"blue_ml" : blue_ml,"blue_pots" : blue_pots}])
-        
-    
+                                            """
+            ),[{"red_ml" : red_ml,"red_pots" : red_pots,"green_ml" : green_ml,"green_pots" : green_pots,"blue_ml" : blue_ml,"blue_pots" : blue_pots}])
+            connection.execute(sqlalchemy.text("""
+            UPDATE potions_table
+            SET
+                quantity = :red_pots
+            WHERE sku = 'R_POT';                 
+            """),[{"red_pots" : red_pots}])
+            connection.execute(sqlalchemy.text("""
+            UPDATE potions_table
+            SET
+                quantity = :green_pots
+            WHERE sku = 'G_POT';                 
+            """),[{"green_pots" : green_pots}])
+            connection.execute(sqlalchemy.text("""
+            UPDATE potions_table
+            SET
+                quantity = :blue_pots
+            WHERE sku = 'B_POT';                 
+            """),[{"blue_pots" : blue_pots}])
+
     
         
     return "OK"

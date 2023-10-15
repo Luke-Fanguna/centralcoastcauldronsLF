@@ -29,7 +29,17 @@ def reset():
                 num_green_potions = 0,
                 num_blue_ml = 100,
                 num_blue_potions = 0
-            WHERE id = 0;                                 
+            WHERE id = 0;           
+            """))
+        connection.execute(sqlalchemy.text(
+            """
+            DELETE FROM carts        
+            """))
+        connection.execute(sqlalchemy.text(
+            """
+            UPDATE potions_table
+            SET
+                quantity = 0;
             """))
     return "OK"
 
@@ -41,6 +51,6 @@ def get_shop_info():
     # TODO: Change me!
     return {
         "shop_name": "Poly Potions",
-        "shop_owner": "Luke Fanguna",
+        "shop_owner": "Luke Fanguna"
     }
 
