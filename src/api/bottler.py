@@ -7,13 +7,7 @@ from src.api import auth
 
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
-sql = """
-SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
-"""
 
-with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(sql))
-        first_row = result.first()
         
 
 router = APIRouter(
@@ -28,36 +22,41 @@ class PotionInventory(BaseModel):
 
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
-    """ """
+
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(
+        """
+        SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
+        """))
+        first_row = result.first()
+    
     print(potions_delivered)
-    
-    for potion in potions_delivered:
-        if potion.potion_type == [100,0,0,0]:
-            quantity, ml = first_row.num_red_ml // 100, first_row.num_red_ml % 100
-            potion_name = "red"
-            pots = potions_delivered[0].quantity
-        elif potion.potion_type == [0,100,0,0]:
-            quantity, ml = first_row.num_green_ml // 100, first_row.num_green_ml % 100
-            potion_name = "green"
-            pots = potions_delivered[0].quantity
-        elif potion.potion_type == [0,0,100,0]:
-            quantity, ml = first_row.num_blue_ml // 100, first_row.num_blue_ml % 100
-            potion_name = "blue"
-            pots = potions_delivered[0].quantity
-        
-        sql = """
-        UPDATE global_inventory
-        SET 
-            num_{}_ml = {},
-            num_{}_potions = {}
-        WHERE id = 0;
-        """.format(potion_name, ml,
-                   potion_name, quantity + pots)
-        print(sql)
-    
+    if len(potions_delivered) != 0:
+        red_ml,red_pots = 0,0
+        green_ml,green_pots = 0,0
+        blue_ml,blue_pots = 0,0
+        for potion in potions_delivered:
+            pots = potion.quantity * 100
+            if potion.potion_type == [100,0,0,0]:
+                red_pots, red_ml = first_row.num_red_ml // pots, first_row.num_red_ml % pots
+            elif potion.potion_type == [0,100,0,0]:
+                green_pots, green_ml = first_row.num_green_ml // pots, first_row.num_green_ml % pots
+            elif potion.potion_type == [0,0,100,0]:
+                blue_pots, blue_ml = first_row.num_blue_ml // pots, first_row.num_blue_ml % pots
+
+            
         with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(sql))
-    
+            connection.execute(sqlalchemy.text("""
+            UPDATE global_inventory
+            SET
+                num_red_potions = :red_pots,
+                num_red_ml = :red_ml,
+                num_green_potions = :green_pots,
+                num_green_ml = :green_ml,
+                num_blue_potions = :blue_pots,
+                num_blue_ml = :blue_ml
+                                            """),[{"red_ml" : red_ml,"red_pots" : red_pots,"green_ml" : green_ml,"green_pots" : green_pots,"blue_ml" : blue_ml,"blue_pots" : blue_pots}])
+        
     
     
         
@@ -70,6 +69,14 @@ def get_bottle_plan():
     """
     Go from barrel to bottle.
     """
+    
+    with db.engine.begin() as connection:
+        result = connection.execute(sqlalchemy.text(
+        """
+        SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
+        """))
+        first_row = result.first()
+        
     # Each bottle has a quantity of what proportion of red, blue, and
     # green potion to add.
     # Expressed in integers from 1 to 100 that must sum up to 100.
@@ -79,17 +86,19 @@ def get_bottle_plan():
     pot_type = [[100,0,0,0],[0,100,0,0],[0,0,100,0]]
     out = []
     c = 0
+    print(poss_barrel)
     for pot in poss_barrel:
         pots = 0
         if (pot >= 100):
             pots = pot // 100
-        out.append(
-            {
-                "potion_type": pot_type[c],
-                "quantity": pots
-            }
-        )
+            out.append(
+                {
+                    "potion_type": pot_type[c],
+                    "quantity": pots
+                }
+            )
         c+=1
             
-
+    print(out)
+    
     return out
