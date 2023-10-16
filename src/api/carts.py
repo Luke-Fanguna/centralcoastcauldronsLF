@@ -24,12 +24,13 @@ def create_cart(new_cart: NewCart):
     cart_id += 1
     customer = new_cart.customer
     with db.engine.begin() as connection:
-        connection.execute(
+        cart_id = connection.execute(
             sqlalchemy.text("""
             INSERT INTO carts 
             (cart_id, customer)
             VALUES
             (:cart_id, :customer)
+            RETURNING id
             """),[{"cart_id" : cart_id, "customer" : customer}])
     return {"cart_id": cart_id}
 
@@ -119,12 +120,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """
             ),[{"sku" : sku}])
         
-        connection.execute(sqlalchemy.text("""
-            UPDATE potions_table
-            
-            WHERE sku = :sku;
-            """
-            ),[{"sku" : sku}])
         for val in cost:
             price = val[0]
         print(cart_checkout.payment)

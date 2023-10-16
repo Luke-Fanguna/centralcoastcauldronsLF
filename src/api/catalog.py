@@ -28,6 +28,6 @@ def get_catalog():
         "price" : i[4],
         "potion_type" : ast.literal_eval(i[2])
       })
-    
+      
     # Can return a max of 20 items.
     return catalog
