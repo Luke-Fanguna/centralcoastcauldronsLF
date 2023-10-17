@@ -20,14 +20,15 @@ def get_catalog():
     catalog = []
 
     for i in result:
-      catalog.append(
-      {
-        "sku" : i[3],
-        "name" : i[5],
-        "quantity" : i[1],
-        "price" : i[4],
-        "potion_type" : ast.literal_eval(i[2])
-      })
+      if i[1] != 0:
+        catalog.append(
+        {
+          "sku" : i[3],
+          "name" : i[5],
+          "quantity" : i[1],
+          "price" : i[4],
+          "potion_type" : ast.literal_eval(i[2])
+        })
       
     # Can return a max of 20 items.
     return catalog

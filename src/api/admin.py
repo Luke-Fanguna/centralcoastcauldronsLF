@@ -24,13 +24,9 @@ def reset():
             SET
                 gold = 100,
                 num_red_ml = 100,
-                num_red_potions = 0,
                 num_green_ml = 100,
-                num_green_potions = 0,
                 num_blue_ml = 100,
-                num_blue_potions = 0,
-                num_evil_ml = 100,
-                num_evil_potions = 0
+                num_evil_ml = 100
             WHERE id = 0;           
             """))
         connection.execute(sqlalchemy.text(
