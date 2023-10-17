@@ -32,10 +32,10 @@ def get_inventory():
         for i in result:
             ml = sum(i)
         result = connection.execute(sqlalchemy.text("""
-        SELECT num_red_potions,num_green_potions,num_blue_potions,num_evil_potions FROM global_inventory
+        SELECT inventory FROM potions_table
         """))
         for i in result:
-            potions = sum(i)
+            potions += i[0]
         result = connection.execute(sqlalchemy.text("""
         SELECT gold FROM global_inventory
         """))
