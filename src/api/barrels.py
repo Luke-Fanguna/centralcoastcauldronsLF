@@ -58,17 +58,22 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
-        SELECT gold, num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
+        SELECT gold, num_red_ml, num_green_ml, num_blue_ml, num_evil_ml FROM global_inventory
         """))
-        first_row = result.first()
-    
+        inventory = result.first()
+        
+        potions_table = connection.execute(sqlalchemy.text("""
+        SELECT sku, inventory
+        FROM potions_table;
+        """))
+        
     print(wholesale_catalog)
-    wallet = first_row.gold
+    wallet = inventory.gold
     gold = 0
     purchased = []
     for barrel in wholesale_catalog:
         if barrel.potion_type == [1,0,0,0]:
-            if first_row.num_red_potions < 10 and barrel.price < wallet:
+            if  1 < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -78,7 +83,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,1,0,0]:
-            if first_row.num_green_potions < 10 and barrel.price < wallet:
+            if inventory.num_green_potions < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -88,7 +93,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,1,0]:
-            if first_row.num_blue_potions < 10 and barrel.price < wallet:
+            if inventory.num_blue_potions < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -98,7 +103,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
     
-    print(first_row.gold)
+    print(inventory.gold)
     return purchased
             
 
