@@ -87,7 +87,7 @@ def get_bottle_plan():
     """
     Go from barrel to bottle.
     """
-    
+    # access global_inventory attributes
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
         """
@@ -95,28 +95,41 @@ def get_bottle_plan():
         """))
         first_row = result.first()
         
+    # access potions_table to see what we have/need to be stocked
+    with db.engine.begin() as connection:
+        pot_table = connection.execute(sqlalchemy.text(
+        """
+        SELECT * FROM potions_table
+        WHERE quantity < 10;
+        """))
+
     # Each bottle has a quantity of what proportion of red, blue, and
     # green potion to add.
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
-    # Initial logic: bottle all barrels into red potions.
-    poss_barrel = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml]
-    pot_type = [[100,0,0,0],[0,100,0,0],[0,0,100,0]]
     out = []
-    c = 0
-    print(poss_barrel)
-    for pot in poss_barrel:
+    # checks each row of the potions_table 
+    for property in pot_table:
+        
+        # stores potion_type and quantity from potions_table
+        pot_type = property[2]
+        pot_name = property[5]
+        quantity = property[1]
         pots = 0
-        if (pot >= 100):
-            pots = pot // 100
+        
+        if quantity < 10:
+            if pot_name is "red pot" and first_row.num_red_ml >= 100:
+                pots = first_row.num_red_ml // 100
+            elif pot_name is "green pot" and first_row.num_green_ml >= 100:
+                pots = first_row.num_green_ml // 100
+            elif pot_name is "blue pot" and first_row.num_red_ml >= 100:
+                pots = first_row.num_blue_ml // 100
             out.append(
-                {
-                    "potion_type": pot_type[c],
-                    "quantity": pots
-                }
+            {
+                "potion_type": pot_type,
+                "quantity": pots
+            }
             )
-        c+=1
+        # bottle if possible
             
-    print(out)
-    
     return out
