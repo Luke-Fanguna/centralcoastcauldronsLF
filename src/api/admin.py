@@ -28,18 +28,20 @@ def reset():
                 num_green_ml = 100,
                 num_green_potions = 0,
                 num_blue_ml = 100,
-                num_blue_potions = 0
+                num_blue_potions = 0,
+                num_evil_ml = 100,
+                num_evil_potions = 0
             WHERE id = 0;           
             """))
         connection.execute(sqlalchemy.text(
             """
-            DELETE FROM carts        
+            DELETE FROM carts_table        
             """))
         connection.execute(sqlalchemy.text(
             """
             UPDATE potions_table
             SET
-                quantity = 0;
+                inventory = 0;
             """))
     return "OK"
 

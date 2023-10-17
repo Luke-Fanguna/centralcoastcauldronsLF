@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
+import ast
 
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
@@ -24,60 +25,38 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
-        """
-        SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
-        """))
-        first_row = result.first()
-    
-    print(potions_delivered)
-    if len(potions_delivered) != 0:
-        red_ml,red_pots = 0,0
-        green_ml,green_pots = 0,0
-        blue_ml,blue_pots = 0,0
-        for potion in potions_delivered:
-            pots = potion.quantity * 100
-            if potion.potion_type == [100,0,0,0]:
-                red_pots, red_ml = first_row.num_red_ml // pots, first_row.num_red_ml % pots
-            elif potion.potion_type == [0,100,0,0]:
-                green_pots, green_ml = first_row.num_green_ml // pots, first_row.num_green_ml % pots
-            elif potion.potion_type == [0,0,100,0]:
-                blue_pots, blue_ml = first_row.num_blue_ml // pots, first_row.num_blue_ml % pots
-
-            
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text("""
-            UPDATE global_inventory
-            SET
-                num_red_potions = :red_pots,
-                num_red_ml = :red_ml,
-                num_green_potions = :green_pots,
-                num_green_ml = :green_ml,
-                num_blue_potions = :blue_pots,
-                num_blue_ml = :blue_ml
-                                            """
-            ),[{"red_ml" : red_ml,"red_pots" : red_pots,"green_ml" : green_ml,"green_pots" : green_pots,"blue_ml" : blue_ml,"blue_pots" : blue_pots}])
-            connection.execute(sqlalchemy.text("""
-            UPDATE potions_table
-            SET
-                quantity = :red_pots
-            WHERE sku = 'R_POT';                 
-            """),[{"red_pots" : red_pots}])
-            connection.execute(sqlalchemy.text("""
-            UPDATE potions_table
-            SET
-                quantity = :green_pots
-            WHERE sku = 'G_POT';                 
-            """),[{"green_pots" : green_pots}])
-            connection.execute(sqlalchemy.text("""
-            UPDATE potions_table
-            SET
-                quantity = :blue_pots
-            WHERE sku = 'B_POT';                 
-            """),[{"blue_pots" : blue_pots}])
-
-    
+        print(potions_delivered)
         
+        additional_potions = sum(potion.quantity for potion in potions_delivered)
+        num_red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
+        num_green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
+        num_blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
+        num_evil_ml = sum(potion.quantity * potion.potion_type[3] for potion in potions_delivered)
+
+
+        
+        for potion_delivered in potions_delivered:
+            connection.execute(
+                sqlalchemy.text("""
+                                UPDATE potions_table
+                                SET inventory = inventory + :additional_potions
+                                WHERE type = :potion_type
+                                """),
+                [{"additional_potions":potion_delivered.quantity,
+                  "potion_type":str(potion_delivered.potion_type)}])
+            print("pot_type",str(potion_delivered.potion_type))
+            
+        connection.execute(
+            sqlalchemy.text("""
+                            UPDATE global_inventory
+                            SET
+                                num_red_ml = num_red_ml - :num_red_ml,
+                                num_green_ml = num_green_ml - :num_green_ml,
+                                num_blue_ml = num_blue_ml - :num_blue_ml,
+                                num_evil_ml = num_evil_ml - :num_evil_ml
+                            """),
+            [{"num_red_ml":num_red_ml,"num_green_ml":num_green_ml,"num_blue_ml":num_blue_ml,"num_evil_ml":num_evil_ml}]
+        )
     return "OK"
 
 # Gets called 4 times a day
@@ -91,7 +70,7 @@ def get_bottle_plan():
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
         """
-        SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions FROM global_inventory
+        SELECT num_red_ml, num_red_potions, num_green_ml, num_green_potions, num_blue_ml, num_blue_potions, num_evil_ml, num_evil_potions FROM global_inventory
         """))
         first_row = result.first()
         
@@ -100,7 +79,7 @@ def get_bottle_plan():
         pot_table = connection.execute(sqlalchemy.text(
         """
         SELECT * FROM potions_table
-        WHERE quantity < 10;
+        WHERE inventory < 10;
         """))
 
     # Each bottle has a quantity of what proportion of red, blue, and
@@ -112,24 +91,19 @@ def get_bottle_plan():
     for property in pot_table:
         
         # stores potion_type and quantity from potions_table
-        pot_type = property[2]
-        pot_name = property[5]
+        pot_type = ast.literal_eval(property[2])
         quantity = property[1]
         pots = 0
-        
+        print("quantity: ", quantity)
+        print("pot_type: ", pot_type)
         if quantity < 10:
-            if pot_name is "red pot" and first_row.num_red_ml >= 100:
-                pots = first_row.num_red_ml // 100
-            elif pot_name is "green pot" and first_row.num_green_ml >= 100:
-                pots = first_row.num_green_ml // 100
-            elif pot_name is "blue pot" and first_row.num_red_ml >= 100:
-                pots = first_row.num_blue_ml // 100
-            out.append(
-            {
-                "potion_type": pot_type,
-                "quantity": pots
-            }
-            )
+            if pot_type[0] <= first_row.num_red_ml and pot_type[1] <= first_row.num_green_ml and pot_type[2] <= first_row.num_blue_ml and pot_type[3] <= first_row.num_evil_ml:
+                out.append(
+                {
+                    "potion_type": pot_type,
+                    # "quantity": pots
+                }
+                )
         # bottle if possible
             
     return out
