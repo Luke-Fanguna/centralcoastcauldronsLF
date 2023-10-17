@@ -67,13 +67,17 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         FROM potions_table;
         """))
         
+    pots = {}
+    for i in potions_table:
+        pots[i[0]] = i[1]
+
     print(wholesale_catalog)
     wallet = inventory.gold
     gold = 0
     purchased = []
     for barrel in wholesale_catalog:
         if barrel.potion_type == [1,0,0,0]:
-            if  1 < 10 and barrel.price < wallet:
+            if  pots['R_POT'] < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -83,7 +87,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,1,0,0]:
-            if inventory.num_green_potions < 10 and barrel.price < wallet:
+            if pots['G_POT'] < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -93,7 +97,17 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,1,0]:
-            if inventory.num_blue_potions < 10 and barrel.price < wallet:
+            if pots['B_POT'] < 10 and barrel.price < wallet:
+                purchased.append(
+                    {
+                        "sku": barrel.sku,
+                        "quantity": barrel.quantity        
+                    }
+                )
+                gold += barrel.price
+                wallet -= barrel.price
+        elif barrel.potion_type == [0,0,0,1]:
+            if pots['EVIL_POT'] < 10 and barrel.price < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
