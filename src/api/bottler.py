@@ -86,43 +86,51 @@ def get_bottle_plan():
     # Expressed in integers from 1 to 100 that must sum up to 100.
 
     out = []
+    barrels = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml,first_row.num_evil_ml]
+
     # checks each row of the potions_table 
     for property in pot_table:
-        print(property)
+
         # stores potion_type and quantity from potions_table
         pot_type = ast.literal_eval(property[2])
         quantity = property[1]
         pots = 0
-        print("quantity: ", quantity)
-        print("pot_type: ", pot_type)
+        
+        # print("quantity: ", quantity)
+        # print("pot_type: ", pot_type)
+        
         if quantity < 10:
-            if pot_type[0] <= first_row.num_red_ml and pot_type[1] <= first_row.num_green_ml and pot_type[2] <= first_row.num_blue_ml and pot_type[3] <= first_row.num_evil_ml:
-                if pot_type[0] <= first_row.num_red_ml:
-                    pots = first_row.num_red_ml // 100
+            if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
+                if pot_type[0] <= barrels[0] and pot_type[0] != 0:
+                    pots = barrels[0] // 100
+                    barrels[0] -= (pots * 100)
                     out.append(
                     {
                         "potion_type": pot_type,
                         "quantity": pots
                     }
                     )
-                elif pot_type[1] <= first_row.num_green_ml:
-                    pots = first_row.num_green_ml // 100
+                elif pot_type[1] <= barrels[1] and pot_type[1] != 0:
+                    pots = barrels[1] // 100
+                    barrels[1] -= (pots * 100)
                     out.append(
                     {
                         "potion_type": pot_type,
                         "quantity": pots
                     }
                     )
-                elif pot_type[2] <= first_row.num_blue_ml:
-                    pots = first_row.num_blue_ml // 100
+                elif pot_type[2] <= barrels[2] and pot_type[2] != 0:
+                    pots = barrels[2] // 100
+                    barrels[2] -= (pots * 100)
                     out.append(
                     {
                         "potion_type": pot_type,
                         "quantity": pots
                     }
                     )
-                elif pot_type[3] <= first_row.num_evil_ml:
-                    pots = first_row.num_evil_ml // 100
+                elif pot_type[3] <= barrels[3] and pot_type[3] != 0:
+                    pots = barrels[3] // 100
+                    barrels[3] -= (pots * 100)
                     out.append(
                     {
                         "potion_type": pot_type,
