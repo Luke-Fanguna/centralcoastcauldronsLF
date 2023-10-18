@@ -29,8 +29,9 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
-    gold,red_ml,green_ml,blue_ml = 0,0,0,0
+    gold,red_ml,green_ml,blue_ml,evil_ml = 0,0,0,0
     for barrel in barrels_delivered:
+        print(barrel)
         gold += barrel.price * barrel.quantity
         if barrel.potion_type == [1,0,0,0]:
             red_ml += barrel.ml_per_barrel * barrel.quantity
@@ -38,6 +39,8 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
             green_ml += barrel.ml_per_barrel * barrel.quantity
         elif barrel.potion_type == [0,0,1,0]:
             blue_ml += barrel.ml_per_barrel * barrel.quantity
+        elif barrel.potion_type == [0,0,0,1]:
+            evil_ml += barrel.ml_per_barrel * barrel.quantity
 
         with db.engine.begin() as connection:
             connection.execute(
@@ -48,6 +51,7 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
                 num_red_ml = num_red_ml + :red_ml,
                 num_green_ml = num_green_ml + :green_ml,
                 num_blue_ml = num_blue_ml + :blue_ml
+                num_evil_ml = num_evil_ml + :evil_ml
                 """),[{"gold": gold, "red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml}])
     
     return "OK"

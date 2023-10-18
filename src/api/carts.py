@@ -128,7 +128,6 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             # 7 potions_table.sku, 
             # 8 potions_table.cost, 
             # 9 potions_table.name
-            print(i)
             connection.execute(sqlalchemy.text("""
             UPDATE potions_table
             SET
@@ -143,4 +142,5 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             SET
                 gold = :gold
             """), [{"gold" : price}])
+    print(cart_checkout.payment)
     return {"total_potions_bought": quantity, "total_gold_paid": price}
