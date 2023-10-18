@@ -132,9 +132,9 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             connection.execute(sqlalchemy.text("""
             UPDATE potions_table
             SET
-                quantity = quantity - :quantity
+                inventory = inventory - :inventory
             WHERE sku = :sku
-            """),[{"quantity" : i[3],"sku": i[7]}])
+            """),[{"inventory" : i[3],"sku": i[7]}])
             quantity += i[3]
             price += (i[3] * i[8])
         connection.execute(sqlalchemy.text(
