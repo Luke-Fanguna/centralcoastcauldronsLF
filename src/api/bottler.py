@@ -27,7 +27,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     with db.engine.begin() as connection:
         print(potions_delivered)
         
-        additional_potions = sum(potion.quantity for potion in potions_delivered)
+        # additional_potions = sum(potion.quantity for potion in potions_delivered)
         num_red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
         num_green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
         num_blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
@@ -44,7 +44,6 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                                 """),
                 [{"additional_potions":potion_delivered.quantity,
                   "potion_type":str(potion_delivered.potion_type)}])
-            print("pot_type",str(potion_delivered.potion_type))
             
         connection.execute(
             sqlalchemy.text("""
@@ -89,7 +88,7 @@ def get_bottle_plan():
     out = []
     # checks each row of the potions_table 
     for property in pot_table:
-        
+        print(property)
         # stores potion_type and quantity from potions_table
         pot_type = ast.literal_eval(property[2])
         quantity = property[1]
@@ -98,12 +97,38 @@ def get_bottle_plan():
         print("pot_type: ", pot_type)
         if quantity < 10:
             if pot_type[0] <= first_row.num_red_ml and pot_type[1] <= first_row.num_green_ml and pot_type[2] <= first_row.num_blue_ml and pot_type[3] <= first_row.num_evil_ml:
-                out.append(
-                {
-                    "potion_type": pot_type,
-                    # "quantity": pots
-                }
-                )
+                if pot_type[0] <= first_row.num_red_ml:
+                    pots = first_row.num_red_ml // 100
+                    out.append(
+                    {
+                        "potion_type": pot_type,
+                        "quantity": pots
+                    }
+                    )
+                elif pot_type[1] <= first_row.num_green_ml:
+                    pots = first_row.num_green_ml // 100
+                    out.append(
+                    {
+                        "potion_type": pot_type,
+                        "quantity": pots
+                    }
+                    )
+                elif pot_type[2] <= first_row.num_blue_ml:
+                    pots = first_row.num_blue_ml // 100
+                    out.append(
+                    {
+                        "potion_type": pot_type,
+                        "quantity": pots
+                    }
+                    )
+                elif pot_type[3] <= first_row.num_evil_ml:
+                    pots = first_row.num_evil_ml // 100
+                    out.append(
+                    {
+                        "potion_type": pot_type,
+                        "quantity": pots
+                    }
+                    )
         # bottle if possible
             
     return out
