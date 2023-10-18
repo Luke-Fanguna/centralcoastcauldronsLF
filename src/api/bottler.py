@@ -94,49 +94,30 @@ def get_bottle_plan():
         # stores potion_type and quantity from potions_table
         pot_type = ast.literal_eval(property[2])
         quantity = property[1]
-        pots = 0
-        
+        print(barrels)
         # print("quantity: ", quantity)
         # print("pot_type: ", pot_type)
         
         if quantity < 10:
             if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-                if pot_type[0] <= barrels[0] and pot_type[0] != 0:
-                    pots = barrels[0] // 100
-                    barrels[0] -= (pots * 100)
+                print("pot ", pot_type)
+                print("barrels ", barrels)
+                result = [a // b if b != 0 else 0 for a, b in zip(pot_type, barrels)]
+                if sum(result) != 0:
+                    quantity = min([x for x in result if x != 0])
                     out.append(
                     {
                         "potion_type": pot_type,
-                        "quantity": pots
+                        "quantity": quantity
                     }
                     )
-                elif pot_type[1] <= barrels[1] and pot_type[1] != 0:
-                    pots = barrels[1] // 100
-                    barrels[1] -= (pots * 100)
-                    out.append(
-                    {
-                        "potion_type": pot_type,
-                        "quantity": pots
-                    }
-                    )
-                elif pot_type[2] <= barrels[2] and pot_type[2] != 0:
-                    pots = barrels[2] // 100
-                    barrels[2] -= (pots * 100)
-                    out.append(
-                    {
-                        "potion_type": pot_type,
-                        "quantity": pots
-                    }
-                    )
-                elif pot_type[3] <= barrels[3] and pot_type[3] != 0:
-                    pots = barrels[3] // 100
-                    barrels[3] -= (pots * 100)
-                    out.append(
-                    {
-                        "potion_type": pot_type,
-                        "quantity": pots
-                    }
-                    )
+                    result = [x * quantity for x in pot_type]
+                    # Subtract the second list from the result
+                    print(barrels)
+                    print(result)
+                    barrels = [a - b for a, b in zip(barrels, result)]
+                    print(barrels)
+
         # bottle if possible
             
     return out
