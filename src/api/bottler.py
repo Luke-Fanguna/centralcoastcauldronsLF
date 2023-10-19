@@ -87,22 +87,23 @@ def get_bottle_plan():
 
     out = []
     barrels = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml,first_row.num_evil_ml]
-
+    
     # checks each row of the potions_table 
     for property in pot_table:
 
         # stores potion_type and quantity from potions_table
         pot_type = ast.literal_eval(property[2])
         quantity = property[1]
-        print(barrels)
-        # print("quantity: ", quantity)
+
+        print("quantity: ", quantity)
         # print("pot_type: ", pot_type)
-        
+        print("barrels: ", barrels)
         if quantity < 10:
             if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
                 # checks how many bottles can be made, min of 1
-                result = [a // b if b != 0 else 0 for a, b in zip(pot_type, barrels)]
-                
+
+                result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
+
                 #if any get mixed, finds the smallest amount and uses that as the quantity
                 if sum(result) != 0:
                     
