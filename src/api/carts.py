@@ -140,7 +140,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """
             UPDATE global_inventory
             SET
-                gold = gold - :gold
+                gold = gold + :gold
             """), [{"gold" : price}])
     print(cart_checkout.payment)
     return {"total_potions_bought": quantity, "total_gold_paid": price}
