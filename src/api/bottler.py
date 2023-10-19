@@ -100,10 +100,13 @@ def get_bottle_plan():
         
         if quantity < 10:
             if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-                print("pot ", pot_type)
-                print("barrels ", barrels)
+                # checks how many bottles can be made, min of 1
                 result = [a // b if b != 0 else 0 for a, b in zip(pot_type, barrels)]
+                
+                #if any get mixed, finds the smallest amount and uses that as the quantity
                 if sum(result) != 0:
+                    
+                    #
                     quantity = min([x for x in result if x != 0])
                     out.append(
                     {
@@ -112,11 +115,7 @@ def get_bottle_plan():
                     }
                     )
                     result = [x * quantity for x in pot_type]
-                    # Subtract the second list from the result
-                    print(barrels)
-                    print(result)
                     barrels = [a - b for a, b in zip(barrels, result)]
-                    print(barrels)
 
         # bottle if possible
             

@@ -29,7 +29,7 @@ class Barrel(BaseModel):
 def post_deliver_barrels(barrels_delivered: list[Barrel]):
     """ """
     print(barrels_delivered)
-    gold,red_ml,green_ml,blue_ml,evil_ml = 0,0,0,0
+    gold,red_ml,green_ml,blue_ml,evil_ml = 0,0,0,0,0
     for barrel in barrels_delivered:
         print(barrel)
         gold += barrel.price * barrel.quantity
@@ -50,9 +50,9 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
                 gold = gold - :gold,
                 num_red_ml = num_red_ml + :red_ml,
                 num_green_ml = num_green_ml + :green_ml,
-                num_blue_ml = num_blue_ml + :blue_ml
+                num_blue_ml = num_blue_ml + :blue_ml,
                 num_evil_ml = num_evil_ml + :evil_ml
-                """),[{"gold": gold, "red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml}])
+                """),[{"gold": gold, "red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml,"evil_ml":evil_ml}])
     
     return "OK"
 
