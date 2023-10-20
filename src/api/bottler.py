@@ -96,7 +96,7 @@ def get_bottle_plan():
         quantity = property[1]
 
         print("quantity: ", quantity)
-        # print("pot_type: ", pot_type)
+        print("pot_type: ", pot_type)
         print("barrels: ", barrels)
         if quantity < 10:
             if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
@@ -119,5 +119,5 @@ def get_bottle_plan():
                     barrels = [a - b for a, b in zip(barrels, result)]
 
         # bottle if possible
-            
+    print(out)
     return out
