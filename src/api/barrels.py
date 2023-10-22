@@ -120,8 +120,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 )
                 gold += barrel.price
                 wallet -= barrel.price
-    
-    print(inventory.gold)
+    print("gold after purchasing: ",wallet)
+    print("cost of barrels: ", gold)
+    print("how much money i have: ", inventory.gold)
     return purchased
             
 
