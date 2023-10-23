@@ -39,14 +39,20 @@ def reset():
             SET
                 inventory = 0;
             """))
+        connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('reset has been initiated');
+            """    
+            ))
     return "OK"
 
 
 @router.get("/shop_info/")
 def get_shop_info():
-    """ """
 
-    # TODO: Change me!
     return {
         "shop_name": "Poly Potions",
         "shop_owner": "Luke Fanguna"

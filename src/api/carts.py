@@ -87,9 +87,18 @@ def create_cart(new_cart: NewCart):
             (:customer)
             RETURNING id
             """),[{"customer" : new_cart.customer}])
+        for i in cart_id:
+            id = i[0]
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/carts/ called\n created cart for :customer \n id: :id');
+        """
+        ),[{"customer":new_cart.customer,"id":id}])
 
-    for i in cart_id:
-        id = i[0]
+    
 
     return {"cart_id": id}
 
@@ -121,6 +130,15 @@ def get_cart(cart_id: int):
         "sku" : id,
         "quantity" : quantity
     })
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/carts/(get) called\n created cart for :customer \n id: :id \n cart:\n :cart');
+        """
+        ),[{"cart":cart}])
     return cart
 
 
@@ -149,6 +167,14 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         """
         ),[{"cart_id" : cart_id, "potions_id" : potions_id, "quantity" : cart_item.quantity}])
         
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/carts/(add) called\n added :sku quantity :quantity for cart_id :cart_id');
+        """
+        ),[{"sku":item_sku, "quantity":cart_item.quantity, "cart_id":cart_id}])
         
     return "OK"
 
@@ -214,41 +240,12 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 gold = gold + :gold
             """), [{"gold" : price}])
             
-            
             result = connection.execute(sqlalchemy.text(
             """
             SELECT customer FROM carts_table
             WHERE id = :id
             """),[{"id":cart_id}]
             )
-            for i in result:
-                name = i[0]
-            
-            acc_id = connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO accounts (account_name) VALUES (:name)
-            RETURNING id;
-            """
-            ),[{"name":name}])
-            
-            acc_t_id = connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO account_transactions (description) VALUES (:description)
-            RETURNING id;
-            """
-            ),[{"description":"{} paid {} and bought {} potions and paid with {}".format(name,price,quantity,cart_checkout.payment)}])
-            
-            for i in acc_id:
-                accounts_id = i[0]
-            for i in acc_t_id:
-                accounts_t_id = i[0]
-            
-            connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO account_ledger_entries (account_id,account_transaction_id,change)
-            VALUES (:account_id,:account_transaction,:change);
-            """
-            ),[{"account_id":accounts_id,"account_transaction":accounts_t_id,"change":price}])   
             
             connection.execute(sqlalchemy.text(
             """
@@ -257,7 +254,24 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             WHERE cart_id = :id
             """
             ),[{"id":cart_id}]) 
-            
+        
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/carts/checkout called\ncheckout intitiated\ncustomer (:cart_id) got :potions potions and spent :gold');
+        """
+        ),{"cart_id":cart_id,"potions":quantity,"gold":price})
+        
         print(cart_checkout.payment)
         return {"total_potions_bought": quantity, "total_gold_paid": price}
+    connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/carts/checkout called\ncheckout calld again. do nothing');
+        """
+        ),{"cart_id":cart_id,"potions":quantity,"gold":price})
     return {}

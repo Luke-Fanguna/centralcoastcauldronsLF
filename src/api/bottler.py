@@ -56,6 +56,14 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
                             """),
             [{"num_red_ml":num_red_ml,"num_green_ml":num_green_ml,"num_blue_ml":num_blue_ml,"num_evil_ml":num_evil_ml}]
         )
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('bottler/deliver called\n potions_delivered = :pot');
+        """
+        ),[{"pot":potions_delivered}])
     return "OK"
 
 # Gets called 4 times a day
@@ -119,5 +127,14 @@ def get_bottle_plan():
                     barrels = [a - b for a, b in zip(barrels, result)]
 
         # bottle if possible
+    with db.engine.begin as connection:
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/bottler/plan called\n output: :out');
+        """
+        ),[{"out" : out}])
     print(out)
     return out

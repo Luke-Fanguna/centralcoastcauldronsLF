@@ -10,9 +10,6 @@ sql = """
         FROM global_inventory
         """
 
-with db.engine.begin() as connection:
-            result = connection.execute(sqlalchemy.text(sql))
-            f = result.first()
 
 router = APIRouter(
     prefix="/audit",
@@ -23,7 +20,6 @@ router = APIRouter(
 @router.get("/inventory")
 def get_inventory():
     
-    print("hello")  
     potions,ml,gold = 0,0,0
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -41,6 +37,14 @@ def get_inventory():
         """))
         for i in result:
             gold = i[0]
+        connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/inventory:\n potion = :potions\n ml = :ml\n, gold = :gold');
+            """    
+            ),[{"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}])
     
     return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
 
@@ -52,7 +56,15 @@ class Result(BaseModel):
 # Gets called once a day
 @router.post("/results")
 def post_audit_results(audit_explanation: Result):
-    """ """
+    with db.engine.begin as connection:
+        connection.execute(sqlalchemy.text(
+        """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/results called');
+        """
+        ))
     print(audit_explanation)
     
     return "OK"
