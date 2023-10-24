@@ -137,9 +137,9 @@ def get_cart(cart_id: int):
             INSERT INTO ledger_log
             (description)
             VALUES
-            ('/carts/(get) called\n created cart for :customer \n id: :id \n cart:\n :cart');
+            ('/carts/(get) called\n created cart id: {id} \n cart:\n {cart}');
         """
-        ),[{"cart":cart}])
+        ),[{"id":id,"cart":cart}])
     return cart
 
 
@@ -173,7 +173,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
             INSERT INTO ledger_log
             (description)
             VALUES
-            ('/carts/(add) called\n added :sku quantity :quantity for cart_id :cart_id');
+            ('/carts/(add) called\n added {sku} quantity :quantity for cart_id :cart_id');
         """
         ),[{"sku":item_sku, "quantity":cart_item.quantity, "cart_id":cart_id}])
         
@@ -195,7 +195,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         ),[{"id":cart_id}])
         for i in result:
             cond = i[0]
-            
+    print(cond)
     if not cond:
         with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text(
@@ -256,23 +256,25 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """
             ),[{"id":cart_id}]) 
         
-        connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/carts/checkout called\ncheckout intitiated\ncustomer (:cart_id) got :potions potions and spent :gold');
-        """
-        ),{"cart_id":cart_id,"potions":quantity,"gold":price})
+            connection.execute(sqlalchemy.text(
+            """
+                INSERT INTO ledger_log
+                (description)
+                VALUES
+                ('/carts/checkout called\ncheckout intitiated\ncustomer (:cart_id) got :potions potions and spent :gold');
+            """
+            ),{"cart_id":cart_id,"potions":quantity,"gold":price})
         
-        print(cart_checkout.payment)
-        return {"total_potions_bought": quantity, "total_gold_paid": price}
-    connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/carts/checkout called\ncheckout calld again. do nothing');
-        """
-        ),{"cart_id":cart_id,"potions":quantity,"gold":price})
-    return {}
+            print(cart_checkout.payment)
+            return {"total_potions_bought": quantity, "total_gold_paid": price}
+    else:
+        with db.engine.begin() as connection:
+            connection.execute(sqlalchemy.text(
+                """
+                INSERT INTO ledger_log
+                (description)
+                VALUES
+                ('/carts/checkout called\ncheckout calld again. do nothing');
+                """
+                ),{"cart_id":cart_id,"potions":quantity,"gold":price})
+        return {}
