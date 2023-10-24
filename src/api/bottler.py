@@ -125,16 +125,16 @@ def get_bottle_plan():
                     )
                     result = [x * quantity for x in pot_type]
                     barrels = [a - b for a, b in zip(barrels, result)]
-
-        # bottle if possible
-    with db.engine.begin as connection:
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(
         """
             INSERT INTO ledger_log
             (description)
             VALUES
-            ('/bottler/plan called\n output: :out');
-        """
-        ),[{"out" : out}])
+            ('/bottler/plan called, :out');
+        """ 
+        ),[{"out" : len(out)}])
+        # bottle if possible
+    
     print(out)
     return out

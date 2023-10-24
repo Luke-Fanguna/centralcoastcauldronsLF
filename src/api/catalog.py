@@ -13,7 +13,8 @@ def get_catalog():
     Each unique item combination must have only a single price.
     """
     with db.engine.begin() as connection:
-      result = connection.execute(sqlalchemy.text("""
+      result = connection.execute(sqlalchemy.text(
+      """
       SELECT * FROM potions_table
       """))
 
@@ -36,8 +37,8 @@ def get_catalog():
             INSERT INTO ledger_log
             (description)
             VALUES
-            ('/catalog called\n:catalog');
+            ('/catalog called');
         """
-        ),{"catalog":catalog})
+        ))
     # Can return a max of 20 items.
     return catalog
