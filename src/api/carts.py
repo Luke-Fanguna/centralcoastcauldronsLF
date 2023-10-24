@@ -77,7 +77,7 @@ class NewCart(BaseModel):
 
 @router.post("/")
 def create_cart(new_cart: NewCart):
-
+    customer = new_cart.customer
     with db.engine.begin() as connection:
         cart_id = connection.execute(
             sqlalchemy.text("""
@@ -89,14 +89,15 @@ def create_cart(new_cart: NewCart):
             """),[{"customer" : new_cart.customer}])
         for i in cart_id:
             id = i[0]
+    with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(
         """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/carts/ called\n created cart for :customer \n id: :id');
+        INSERT INTO ledger_log
+        (description)
+        VALUES
+        ('/carts/ called \n created cart for {customer} \n id: {id}')
         """
-        ),[{"customer":new_cart.customer,"id":id}])
+        ),[{"customer":customer,"id":id}])
 
     
 

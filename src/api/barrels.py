@@ -142,7 +142,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
         VALUES
         ('/barrel/plan called\nhere are the barrels purchaed: :purchased');
         """
-        ),[{"purchased" : purchased}])
+        ),[{"purchased" : len(purchased)}])
     return purchased
             
 
