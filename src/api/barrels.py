@@ -54,6 +54,15 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
                 num_evil_ml = num_evil_ml + :evil_ml
                 """),[{"gold": gold, "red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml,"evil_ml":evil_ml}])
     
+            connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO ledger_log
+            (description)
+            VALUES
+            ('/barrel/deliver called\n gold = :gold\n barrels = [:red,:green,:blue,:evil]');
+            """
+            ),[{"gold":gold,"red":red_ml,"green":green_ml,"blue":blue_ml,"evil":evil_ml}])
+    
     return "OK"
 
 # Gets called once a day
@@ -124,6 +133,16 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print("cost of barrels: ", gold)
     print("how much money i have: ", inventory.gold)
     print("barrels to be purchased: ", purchased)
+    
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+        """
+        INSERT INTO ledger_log
+        (description)
+        VALUES
+        ('/barrel/plan called\nhere are the barrels purchaed: :purchased');
+        """
+        ),[{"purchased" : purchased}])
     return purchased
             
 

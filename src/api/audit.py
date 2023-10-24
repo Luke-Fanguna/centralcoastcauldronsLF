@@ -44,7 +44,7 @@ def get_inventory():
             VALUES
             ('/inventory:\n potion = :potions\n ml = :ml\n, gold = :gold');
             """    
-            ),[{"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}])
+            ),[{"potions": potions, "ml": ml, "gold": gold}])
     
     return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
 
