@@ -27,7 +27,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
     with db.engine.begin() as connection:
         print(potions_delivered)
         
-        # additional_potions = sum(potion.quantity for potion in potions_delivered)
+        additional_potions = sum(potion.quantity for potion in potions_delivered)
         num_red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
         num_green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
         num_blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
@@ -63,7 +63,7 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
             VALUES
             ('bottler/deliver called\n potions_delivered = :pot');
         """
-        ),[{"pot":potions_delivered}])
+        ),[{"pot":additional_potions}])
     return "OK"
 
 # Gets called 4 times a day

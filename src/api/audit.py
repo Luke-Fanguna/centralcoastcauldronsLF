@@ -45,7 +45,9 @@ def get_inventory():
             ('/inventory:\n potion = :potions\n ml = :ml\n, gold = :gold');
             """    
             ),[{"potions": potions, "ml": ml, "gold": gold}])
-    
+    print("potions", potions)
+    print("ml",ml)
+    print("gold",gold)
     return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
 
 class Result(BaseModel):
