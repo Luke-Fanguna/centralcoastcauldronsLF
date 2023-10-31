@@ -61,6 +61,32 @@ def search_orders(
                 cart.created_at AS timestamp
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+            WHERE customer.id = :cart_id AND potions.id = :potions_id;
+            """
+            ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
+            print(info)
+        elif customer_name:
+
+            cust_id = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                id
+            FROM carts_table
+            WHERE customer = :customer
+            """
+            ),[{"customer":customer_name}]).scalar_one()
+            
+            info = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                customer.customer AS name,
+                cart.quantity AS quantity,
+                potions.name AS potion_name,
+                potions.cost AS cost,
+                cart.created_at AS timestamp
+            FROM carts_items_table AS cart
+            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id;
             """
             ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
