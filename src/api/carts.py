@@ -31,6 +31,40 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
+    with db.engine.begin() as connection:
+        if customer_name and potion_sku:
+            potion_id = connection.execute(sqlalchemy.text(    
+            """
+            SELECT 
+                id
+            FROM potions_table
+            WHERE sku = :sku
+            """
+            ),[{"sku":potion_sku}]).scalar_one()
+
+            cust_id = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                id
+            FROM carts_table
+            WHERE customer = :customer
+            """
+            ),[{"customer":customer_name}]).scalar_one()
+            
+            info = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                customer.customer AS name,
+                cart.quantity AS quantity,
+                potions.name AS potion_name,
+                potions.cost AS cost,
+                cart.created_at AS timestamp
+            FROM carts_items_table AS cart
+            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id;
+            """
+            ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
+
     """
     Search for cart line items by customer name and/or potion sku.
 
