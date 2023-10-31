@@ -86,22 +86,8 @@ def create_cart(new_cart: NewCart):
             VALUES
             (:customer)
             RETURNING id
-            """),[{"customer" : new_cart.customer}])
-        for i in cart_id:
-            id = i[0]
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-        """
-        INSERT INTO ledger_log
-        (description)
-        VALUES
-        ('/carts/ called \n created cart for {customer} \n id: {id}')
-        """
-        ),[{"customer":customer,"id":id}])
-
-    
-
-    return {"cart_id": id}
+            """),[{"customer" : new_cart.customer}]).fetchone()[0]
+    return {"cart_id": cart_id}
 
 
 @router.get("/{cart_id}")
@@ -119,27 +105,15 @@ def get_cart(cart_id: int):
     for i in result:
         quantity = i[3]
         with db.engine.begin() as connection:
-            a = connection.execute(sqlalchemy.text("""
+            id = connection.execute(sqlalchemy.text("""
             SELECT sku FROM potions_table
             WHERE id = :id
-            """),[{"id" : i[2]}])
-        for x in a:
-            print(x)
-            id = x[0]
+            """),[{"id" : i[2]}]).fetchone()[0]
             
     cart.append({
         "sku" : id,
         "quantity" : quantity
     })
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/carts/(get) called\n created cart id: {id} \n cart:\n {cart}');
-        """
-        ),[{"id":id,"cart":cart}])
     return cart
 
 
@@ -167,16 +141,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         (:cart_id, :potions_id, :quantity, false);
         """
         ),[{"cart_id" : cart_id, "potions_id" : potions_id, "quantity" : cart_item.quantity}])
-        
-        connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/carts/(add) called\n added {sku} quantity :quantity for cart_id :cart_id');
-        """
-        ),[{"sku":item_sku, "quantity":cart_item.quantity, "cart_id":cart_id}])
-        
+              
     return "OK"
 
 
@@ -195,50 +160,42 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
         ),[{"id":cart_id}])
         for i in result:
             cond = i[0]
-    print(cond)
     if not cond:
         with db.engine.begin() as connection:
             result = connection.execute(sqlalchemy.text(
             """
             WITH filtered_table as
             (
-                SELECT * FROM carts_items_table
+                SELECT potions_id FROM carts_items_table
                 WHERE cart_id = :cart_id
             )
-            SELECT *
+            SELECT 
+                potions_table.sku,
+                potions_table.cost,
+                potions_table.id
             FROM filtered_table
-            INNER JOIN potions_table ON filtered_table.potions_id = potions_table.id;
+            INNER JOIN potions_table ON filtered_table.potions_id = potions_table.id
+            ORDER BY potions_table.sku, potions_table.cost, potions_table.id;            
             """
-                ),[{"cart_id":cart_id}])
+                ),[{"cart_id":cart_id}]).fetchone()
             
-            price, quantity = 0,0
-            for i in result: 
-                print(i)
-                # 0 carts_items_table.id, 
-                # 1 carts_table.id, 
-                # 2 potions_table.id, 
-                # 3 carts_items_table.quantity, 
-                # 4 carts_table.potion_id, 
-                # 5 potions_table.quantity, 
-                # 6 potions_table.potion_type, 
-                # 7 potions_table.sku, 
-                # 8 potions_table.cost, 
-                # 9 potions_table.name
-                connection.execute(sqlalchemy.text("""
-                UPDATE potions_table
-                SET
-                    inventory = inventory - :inventory
-                WHERE sku = :sku
-                """),[{"inventory" : i[3],"sku": i[8]}])
-                quantity += i[3]
-                
-                price += (i[3] * i[9])
+            print(result)
+                        
+            quantity = connection.execute(sqlalchemy.text("""
+            SELECT 
+                sum(quantity)
+            FROM potions_ledgers
+            WHERE potion_id = :id
+            """),[{"id":result[2]}]).fetchone()[0]
+
+            price = result[1] * quantity
             
             connection.execute(sqlalchemy.text(
             """
-            UPDATE global_inventory
-            SET
-                gold = gold + :gold
+            INSERT INTO gold_ledgers
+            (gold)
+            VALUES
+            (:gold)
             """), [{"gold" : price}])
             
             result = connection.execute(sqlalchemy.text(
@@ -256,25 +213,5 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """
             ),[{"id":cart_id}]) 
         
-            connection.execute(sqlalchemy.text(
-            """
-                INSERT INTO ledger_log
-                (description)
-                VALUES
-                ('/carts/checkout called\ncheckout intitiated\ncustomer (:cart_id) got :potions potions and spent :gold');
-            """
-            ),{"cart_id":cart_id,"potions":quantity,"gold":price})
-        
-            print(cart_checkout.payment)
             return {"total_potions_bought": quantity, "total_gold_paid": price}
-    else:
-        with db.engine.begin() as connection:
-            connection.execute(sqlalchemy.text(
-                """
-                INSERT INTO ledger_log
-                (description)
-                VALUES
-                ('/carts/checkout called\ncheckout calld again. do nothing');
-                """
-                ),{"cart_id":cart_id,"potions":quantity,"gold":price})
-        return {}
+    return {}

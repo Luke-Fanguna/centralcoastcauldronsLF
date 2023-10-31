@@ -3,13 +3,6 @@ from src import database as db
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from src.api import auth
-import math
-
-sql = """
-        SELECT *
-        FROM global_inventory
-        """
-
 
 router = APIRouter(
     prefix="/audit",
@@ -20,35 +13,44 @@ router = APIRouter(
 @router.get("/inventory")
 def get_inventory():
     
-    potions,ml,gold = 0,0,0
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("""
-        SELECT num_red_ml,num_green_ml,num_blue_ml,num_evil_ml FROM global_inventory
-        """))
-        for i in result:
-            ml = sum(i)
-        result = connection.execute(sqlalchemy.text("""
-        SELECT inventory FROM potions_table
-        """))
-        for i in result:
-            potions += i[0]
-        result = connection.execute(sqlalchemy.text("""
-        SELECT gold FROM global_inventory
-        """))
-        for i in result:
-            gold = i[0]
-        connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/inventory:\n potion = :potions\n ml = :ml\n, gold = :gold');
-            """    
-            ),[{"potions": potions, "ml": ml, "gold": gold}])
+
+        potions = connection.execute(sqlalchemy.text(
+        """
+        SELECT 
+            SUM(quantity)
+        FROM potions_ledgers
+        """
+        )).fetchone()[0]
+        if potions is None:
+            potions = 0
+        
+        ml = connection.execute(sqlalchemy.text(
+        """
+        SELECT 
+            SUM(red_ml) AS red,
+            SUM(green_ml) AS green,
+            SUM(blue_ml) AS blue,
+            SUM(evil_ml) AS evil
+        FROM ml_ledgers
+        """
+        )).fetchone()
+        print(ml)
+        
+        gold = connection.execute(sqlalchemy.text(
+        """
+        SELECT
+            SUM(gold)
+        FROM gold_ledgers
+        """
+        )).fetchone()[0]
+
     print("potions", potions)
-    print("ml",ml)
+    print("ml",sum(ml))
     print("gold",gold)
-    return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
+
+    return {"number_of_potions": potions, "ml_in_barrels": sum(ml), "gold": gold}
+    
 
 class Result(BaseModel):
     gold_match: bool
@@ -58,15 +60,6 @@ class Result(BaseModel):
 # Gets called once a day
 @router.post("/results")
 def post_audit_results(audit_explanation: Result):
-    with db.engine.begin as connection:
-        connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/results called');
-        """
-        ))
     print(audit_explanation)
     
     return "OK"

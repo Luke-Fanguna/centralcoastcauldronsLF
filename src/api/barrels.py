@@ -42,26 +42,19 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
         elif barrel.potion_type == [0,0,0,1]:
             evil_ml += barrel.ml_per_barrel * barrel.quantity
 
-        with db.engine.begin() as connection:
-            connection.execute(
-                sqlalchemy.text("""
-                UPDATE global_inventory
-                SET 
-                gold = gold - :gold,
-                num_red_ml = num_red_ml + :red_ml,
-                num_green_ml = num_green_ml + :green_ml,
-                num_blue_ml = num_blue_ml + :blue_ml,
-                num_evil_ml = num_evil_ml + :evil_ml
-                """),[{"gold": gold, "red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml,"evil_ml":evil_ml}])
-    
-            connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/barrel/deliver called\n gold = :gold\n barrels = [:red,:green,:blue,:evil]');
-            """
-            ),[{"gold":gold,"red":red_ml,"green":green_ml,"blue":blue_ml,"evil":evil_ml}])
+    with db.engine.begin() as connection:
+        connection.execute(sqlalchemy.text(
+        """
+        INSERT INTO gold_ledgers
+        (gold)
+        VALUES
+        (:gold);
+        INSERT INTO ml_ledgers
+        (red_ml,green_ml,blue_ml,evil_ml)
+        VALUES
+        (:red_ml,:green_ml,:blue_ml,:evil_ml)
+        """
+        ),[{"gold":-gold,"red_ml":red_ml,"green_ml":green_ml,"blue_ml":blue_ml,"evil_ml":evil_ml}])
     
     return "OK"
 
@@ -70,27 +63,33 @@ def post_deliver_barrels(barrels_delivered: list[Barrel]):
 def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text("""
-        SELECT gold, num_red_ml, num_green_ml, num_blue_ml, num_evil_ml FROM global_inventory
-        """))
-        inventory = result.first()
+        barrels = connection.execute(sqlalchemy.text(
+        """
+        SELECT 
+            SUM(red_ml) AS red,
+            SUM(green_ml) AS green,
+            SUM(blue_ml) AS blue,
+            SUM(evil_ml) AS evil
+        FROM ml_ledgers
+        """
+        )).fetchone()
+        barrels = list(barrels)
         
-        potions_table = connection.execute(sqlalchemy.text("""
-        SELECT sku, inventory
-        FROM potions_table;
-        """))
+        cash = connection.execute(sqlalchemy.text(
+        """
+        SELECT
+            SUM(gold)
+        FROM gold_ledgers
+        """            
+        )).fetchone()[0]
         
-    pots = {}
-    for i in potions_table:
-        pots[i[0]] = i[1]
 
-    print(wholesale_catalog)
-    wallet = inventory.gold
+    wallet = cash
     gold = 0
     purchased = []
     for barrel in wholesale_catalog:
         if barrel.potion_type == [1,0,0,0]:
-            if  pots['R_POT'] < 10 and barrel.price < wallet:
+            if  barrels[0] < 100 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -100,7 +99,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,1,0,0]:
-            if pots['G_POT'] < 10 and barrel.price < wallet:
+            if barrels[1] < 100 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -110,7 +109,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,1,0]:
-            if pots['B_POT'] < 10 and barrel.price < wallet:
+            if barrels[2] < 100 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -120,7 +119,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,0,1]:
-            if pots['EVIL_POT'] < 10 and barrel.price < wallet:
+            if barrels[3] < 100 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -131,18 +130,9 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 wallet -= barrel.price
     print("gold after purchasing: ",wallet)
     print("cost of barrels: ", gold)
-    print("how much money i have: ", inventory.gold)
+    print("how much money i have: ", cash)
     print("barrels to be purchased: ", purchased)
     
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-        """
-        INSERT INTO ledger_log
-        (description)
-        VALUES
-        ('/barrel/plan called\nhere are the barrels purchaed: :purchased');
-        """
-        ),[{"purchased" : len(purchased)}])
     return purchased
             
 

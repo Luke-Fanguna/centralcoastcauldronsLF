@@ -9,8 +9,6 @@ import ast
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
 
-        
-
 router = APIRouter(
     prefix="/bottler",
     tags=["bottler"],
@@ -25,9 +23,8 @@ class PotionInventory(BaseModel):
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
     with db.engine.begin() as connection:
-        print(potions_delivered)
         
-        additional_potions = sum(potion.quantity for potion in potions_delivered)
+        # additional_potions = sum(potion.quantity for potion in potions_delivered)
         num_red_ml = sum(potion.quantity * potion.potion_type[0] for potion in potions_delivered)
         num_green_ml = sum(potion.quantity * potion.potion_type[1] for potion in potions_delivered)
         num_blue_ml = sum(potion.quantity * potion.potion_type[2] for potion in potions_delivered)
@@ -36,34 +33,34 @@ def post_deliver_bottles(potions_delivered: list[PotionInventory]):
 
         
         for potion_delivered in potions_delivered:
-            connection.execute(
-                sqlalchemy.text("""
-                                UPDATE potions_table
-                                SET inventory = inventory + :additional_potions
-                                WHERE type = :potion_type
-                                """),
-                [{"additional_potions":potion_delivered.quantity,
-                  "potion_type":str(potion_delivered.potion_type)}])
-            
-        connection.execute(
-            sqlalchemy.text("""
-                            UPDATE global_inventory
-                            SET
-                                num_red_ml = num_red_ml - :num_red_ml,
-                                num_green_ml = num_green_ml - :num_green_ml,
-                                num_blue_ml = num_blue_ml - :num_blue_ml,
-                                num_evil_ml = num_evil_ml - :num_evil_ml
-                            """),
-            [{"num_red_ml":num_red_ml,"num_green_ml":num_green_ml,"num_blue_ml":num_blue_ml,"num_evil_ml":num_evil_ml}]
-        )
+            id = connection.execute(sqlalchemy.text(
+            """
+            SELECT id
+            FROM potions_table
+            WHERE type = :type
+            """),
+            [{"type":str(potion_delivered.potion_type)}]).fetchone()[0]
+            connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO potions_ledgers
+            (potion_id,quantity)
+            VALUES
+            (:potion_id,:quantity)
+            """
+            ),[{"potion_id":id,"quantity":potion_delivered.quantity}])
+
         connection.execute(sqlalchemy.text(
         """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('bottler/deliver called\n potions_delivered = :pot');
+        INSERT INTO ml_ledgers
+        (red_ml,green_ml,blue_ml,evil_ml)
+        VALUES
+        (:red_ml,:green_ml,:blue_ml,:evil_ml)
         """
-        ),[{"pot":additional_potions}])
+        ),
+        [{"red_ml":-num_red_ml,"green_ml":-num_green_ml,
+          "blue_ml":-num_blue_ml,"evil_ml":-num_evil_ml}])
+        
+            
     return "OK"
 
 # Gets called 4 times a day
@@ -75,66 +72,40 @@ def get_bottle_plan():
     """
     # access global_inventory attributes
     with db.engine.begin() as connection:
-        result = connection.execute(sqlalchemy.text(
+        barrels = connection.execute(sqlalchemy.text(
         """
-        SELECT num_red_ml, num_green_ml, num_blue_ml, num_evil_ml FROM global_inventory
-        """))
-        first_row = result.first()
+        SELECT 
+            SUM(red_ml) AS red_ml, 
+            SUM(green_ml) AS green_ml,
+            SUM(blue_ml) AS blue_ml, 
+            SUM(evil_ml) AS evil_ml
+        FROM ml_ledgers
+        ORDER BY red_ml, green_ml, blue_ml, evil_ml
+        """)).fetchone()
+        barrels = list(barrels)
         
     # access potions_table to see what we have/need to be stocked
     with db.engine.begin() as connection:
         pot_table = connection.execute(sqlalchemy.text(
         """
-        SELECT * FROM potions_table
-        WHERE inventory < 10;
-        """))
-
-    # Each bottle has a quantity of what proportion of red, blue, and
-    # green potion to add.
-    # Expressed in integers from 1 to 100 that must sum up to 100.
+        SELECT type 
+        FROM potions_table
+        """)).fetchall()
+    pot_table = [list(ast.literal_eval(x[0])) for x in pot_table]
 
     out = []
-    barrels = [first_row.num_red_ml,first_row.num_green_ml,first_row.num_blue_ml,first_row.num_evil_ml]
-    
-    # checks each row of the potions_table 
-    for property in pot_table:
-
-        # stores potion_type and quantity from potions_table
-        pot_type = ast.literal_eval(property[2])
-        quantity = property[1]
-
-        print("quantity: ", quantity)
-        print("pot_type: ", pot_type)
-        print("barrels: ", barrels)
-        if quantity < 10:
-            if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-                # checks how many bottles can be made, min of 1
-
-                result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
-
-                #if any get mixed, finds the smallest amount and uses that as the quantity
-                if sum(result) != 0:
-                    
-                    #
-                    quantity = min([x for x in result if x != 0])
-                    out.append(
-                    {
-                        "potion_type": pot_type,
-                        "quantity": quantity
-                    }
-                    )
-                    result = [x * quantity for x in pot_type]
-                    barrels = [a - b for a, b in zip(barrels, result)]
-    with db.engine.begin() as connection:
-        connection.execute(sqlalchemy.text(
-        """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('/bottler/plan called, :out');
-        """ 
-        ),[{"out" : len(out)}])
-        # bottle if possible
-    
-    print(out)
+    for pot_type in pot_table:
+        if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
+            print(barrels)
+            result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
+            if sum(result) != 0:
+                quantity = min([x for x in result if x != 0])
+                out.append(
+                {
+                    "potion_type": pot_type,
+                    "quantity": quantity
+                }
+                )
+                result = [x * quantity for x in pot_type]
+                barrels = [a - b for a, b in zip(barrels, result)]
     return out

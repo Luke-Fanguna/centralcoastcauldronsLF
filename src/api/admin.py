@@ -19,34 +19,22 @@ def reset():
 
     with db.engine.begin() as connection:
         connection.execute(sqlalchemy.text(
-            """
-            UPDATE global_inventory
-            SET
-                gold = 100,
-                num_red_ml = 100,
-                num_green_ml = 100,
-                num_blue_ml = 100,
-                num_evil_ml = 100
-            WHERE id = 0;           
-            """))
+        """
+        TRUNCATE TABLE ml_ledgers, carts_table, gold_ledgers, potions_ledgers CASCADE;
+        """
+        ))
         connection.execute(sqlalchemy.text(
-            """
-            DELETE FROM carts_table        
-            """))
-        connection.execute(sqlalchemy.text(
-            """
-            UPDATE potions_table
-            SET
-                inventory = 0;
-            """))
-        connection.execute(sqlalchemy.text(
-            """
-            INSERT INTO ledger_log
-            (description)
-            VALUES
-            ('reset has been initiated');
-            """    
-            ))
+        """
+        INSERT INTO ml_ledgers
+        (red_ml,green_ml,blue_ml,evil_ml)
+        VALUES
+        (:red_ml,:green_ml,:blue_ml,:evil_ml);
+        INSERT INTO gold_ledgers
+        (gold)
+        VALUES
+        (100);
+        """
+        ),[{"red_ml":100,"green_ml":100,"blue_ml":100,"evil_ml":100}])
     return "OK"
 
 
