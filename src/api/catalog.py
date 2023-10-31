@@ -51,7 +51,7 @@ def get_catalog():
             "name" : potion_name[1],
             "quantity" : quantity,
             "price":potion_name[2],
-            "potion_type" : potion_name[3]
+            "potion_type" : ast.literal_eval(potion_name[3])
           }
         )
 
