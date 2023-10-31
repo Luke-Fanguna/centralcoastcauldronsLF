@@ -65,7 +65,7 @@ def search_orders(
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            WHERE customer.id = :cart_id AND potions.id = :potions_id;
+            WHERE customer.id = :cart_id AND potions.id = :potions_id
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
@@ -92,7 +92,7 @@ def search_orders(
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            WHERE customer.id = :cart_id;
+            WHERE customer.id = :cart_id
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"cart_id":cust_id}]).fetchall()
@@ -119,7 +119,7 @@ def search_orders(
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            WHERE potions.id = :potions_id;
+            WHERE potions.id = :potions_id
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"potions_id":potion_id}]).fetchall()
