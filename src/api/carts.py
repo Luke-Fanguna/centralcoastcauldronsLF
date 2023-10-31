@@ -57,16 +57,16 @@ def search_orders(
             info = connection.execute(sqlalchemy.text(
             """
             SELECT
-                customer_table.customer AS name,
+                customer.customer AS name,
                 cart.quantity AS quantity,
-                cart.total AS total,
                 potions.name AS potion_name,
                 potions.cost AS cost,
                 cart.created_at AS timestamp
             FROM carts_items_table AS cart
-            INNER JOIN carts_table AS customer_table ON cart.cart_id = customer_table.id
+            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
             WHERE customer.id = :cart_id AND potions.id = :potions_id;
+            ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
         elif customer_name != "" and potion_sku == "":
@@ -86,7 +86,6 @@ def search_orders(
             SELECT
                 customer.customer AS name,
                 cart.quantity AS quantity,
-                cart.total AS total,
                 potions.name AS potion_name,
                 potions.cost AS cost,
                 cart.created_at AS timestamp
@@ -94,6 +93,7 @@ def search_orders(
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
             WHERE customer.id = :cart_id;
+            ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"cart_id":cust_id}]).fetchall()
         elif customer == "" and potion_sku != "":
@@ -113,7 +113,6 @@ def search_orders(
             SELECT
                 customer.customer AS name,
                 cart.quantity AS quantity,
-                cart.total AS total,
                 potions.name AS potion_name,
                 potions.cost AS cost,
                 cart.created_at AS timestamp
@@ -121,6 +120,7 @@ def search_orders(
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
             WHERE potions.id = :potions_id;
+            ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             ),[{"potions_id":potion_id}]).fetchall()
         else:
@@ -131,13 +131,13 @@ def search_orders(
             SELECT
                 customer.customer AS name,
                 cart.quantity AS quantity,
-                cart.total AS total,
                 potions.name AS potion_name,
-                cart.created_at AS timestamp,
+                potions.cost AS cost,
+                cart.created_at AS timestamp
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            ORDER BY name,quantity,total,potion_name,timestamp
+            ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             )).fetchall()
         print(info)
@@ -154,24 +154,31 @@ def search_orders(
             info.reverse()
         
         n = int(search_page) * 5
+        if len(info) > n:
+            a = n - 5
+            b = n
+        else:
+            a = n - 5
+            b = len(info)
         out = []
-        for i in range(n-5,n):
+        # customer, q, name, price, time
+        for i in range(a,b):
             print(info[i])
             time = info[i][4].strftime("%m/%d/%Y, %I:%M:%S %p")
             out.append([{
-                "line_item_id":i,                      
+                "line_item_id":i+1,                      
                 "item_sku":str(info[i][1]) + " " + str(info[i][2]),
                 "customer_name":info[i][0],              
-                "line_item_total":info[i][3],
+                "line_item_total":info[i][3] * info[i][1],
                 "timestamp":time,
                 }
                 ])
-        if search_page == 1:
+        if int(search_page) == 1:
             prev = ""
             next = "2"
         else:
-            prev = str(search_page - 1)
-            next = str(search_page + 1)
+            prev = str(int(search_page) - 1)
+            next = str(int(search_page) + 1)
         return {
         "previous": prev,
         "next": next,
