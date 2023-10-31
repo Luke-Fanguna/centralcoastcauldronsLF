@@ -77,7 +77,6 @@ class NewCart(BaseModel):
 
 @router.post("/")
 def create_cart(new_cart: NewCart):
-    customer = new_cart.customer
     with db.engine.begin() as connection:
         cart_id = connection.execute(
             sqlalchemy.text("""
