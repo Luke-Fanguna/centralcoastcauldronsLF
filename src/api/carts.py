@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from src.api import auth
 from enum import Enum
+from datetime import datetime
 
 customer = ""
 cart_id = 0
@@ -32,7 +33,9 @@ def search_orders(
     sort_order: search_sort_order = search_sort_order.desc,
 ):
     with db.engine.begin() as connection:
-        if customer_name and potion_sku:
+        if customer_name != "" and potion_sku != "":
+            print("customer name:",customer)
+            print("potion_sku:",potion_sku)
             potion_id = connection.execute(sqlalchemy.text(    
             """
             SELECT 
@@ -54,20 +57,21 @@ def search_orders(
             info = connection.execute(sqlalchemy.text(
             """
             SELECT
-                customer.customer AS name,
+                customer_table.customer AS name,
                 cart.quantity AS quantity,
+                cart.total AS total,
                 potions.name AS potion_name,
                 potions.cost AS cost,
                 cart.created_at AS timestamp
             FROM carts_items_table AS cart
-            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+            INNER JOIN carts_table AS customer_table ON cart.cart_id = customer_table.id
             INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
             WHERE customer.id = :cart_id AND potions.id = :potions_id;
             """
             ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
-            print(info)
-        elif customer_name:
-
+        elif customer_name != "" and potion_sku == "":
+            print("customer name:",customer)
+            print("potion_sku:",potion_sku)
             cust_id = connection.execute(sqlalchemy.text(
             """
             SELECT
@@ -82,14 +86,98 @@ def search_orders(
             SELECT
                 customer.customer AS name,
                 cart.quantity AS quantity,
+                cart.total AS total,
                 potions.name AS potion_name,
                 potions.cost AS cost,
                 cart.created_at AS timestamp
             FROM carts_items_table AS cart
             INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
-            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id;
+            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+            WHERE customer.id = :cart_id;
             """
-            ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
+            ),[{"cart_id":cust_id}]).fetchall()
+        elif customer == "" and potion_sku != "":
+            print("customer name:",customer)
+            print("potion_sku:",potion_sku)
+            potion_id = connection.execute(sqlalchemy.text(    
+            """
+            SELECT 
+                id
+            FROM potions_table
+            WHERE sku = :sku
+            """
+            ),[{"sku":potion_sku}]).scalar_one()
+            
+            info = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                customer.customer AS name,
+                cart.quantity AS quantity,
+                cart.total AS total,
+                potions.name AS potion_name,
+                potions.cost AS cost,
+                cart.created_at AS timestamp
+            FROM carts_items_table AS cart
+            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+            WHERE potions.id = :potions_id;
+            """
+            ),[{"potions_id":potion_id}]).fetchall()
+        else:
+            print("customer name:",customer)
+            print("potion_sku:",potion_sku)
+            info = connection.execute(sqlalchemy.text(
+            """
+            SELECT
+                customer.customer AS name,
+                cart.quantity AS quantity,
+                cart.total AS total,
+                potions.name AS potion_name,
+                cart.created_at AS timestamp,
+            FROM carts_items_table AS cart
+            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+            ORDER BY name,quantity,total,potion_name,timestamp
+            """
+            )).fetchall()
+        print(info)
+        if sort_col == "customer_name":
+            info = sorted(info, key=lambda x: x[0])
+        elif sort_col == "item_sku":
+            info = sorted(info, key=lambda x: x[2])
+        elif sort_col == "line_item_total":
+            info = sorted(info, key=lambda x: x[3])
+        elif sort_col == "timestamp":
+            info = sorted(info, key=lambda x: x[4])
+        
+        if sort_order == "desc":
+            info.reverse()
+        
+        n = int(search_page) * 5
+        out = []
+        for i in range(n-5,n):
+            print(info[i])
+            time = info[i][4].strftime("%m/%d/%Y, %I:%M:%S %p")
+            out.append([{
+                "line_item_id":i,                      
+                "item_sku":str(info[i][1]) + " " + str(info[i][2]),
+                "customer_name":info[i][0],              
+                "line_item_total":info[i][3],
+                "timestamp":time,
+                }
+                ])
+        if search_page == 1:
+            prev = ""
+            next = "2"
+        else:
+            prev = str(search_page - 1)
+            next = str(search_page + 1)
+        return {
+        "previous": prev,
+        "next": next,
+        "results": out
+    }
+
 
     """
     Search for cart line items by customer name and/or potion sku.
@@ -116,19 +204,6 @@ def search_orders(
     time is 5 total line items.
     """
 
-    return {
-        "previous": "",
-        "next": "",
-        "results": [
-            {
-                "line_item_id": 1,
-                "item_sku": "1 oblivion potion",
-                "customer_name": "Scaramouche",
-                "line_item_total": 50,
-                "timestamp": "2021-01-01T00:00:00Z",
-            }
-        ],
-    }
 
 
 class NewCart(BaseModel):
@@ -185,21 +260,23 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
     with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text(
         """
-        SELECT id FROM potions_table
-        WHERE sku = :sku;
+        SELECT id, cost FROM potions_table
+        WHERE sku = :sku
+        ORDER BY id, cost;
         """
         ),[{"sku" : item_sku}])
         
-        potions_id = [i[0] for i in result][0]
+        potions_id = result[0]
+        cost = result[1]
         
         connection.execute(sqlalchemy.text(
         """
         INSERT INTO carts_items_table
-        (cart_id, potions_id, quantity, is_check)
+        (cart_id, potions_id, quantity, total, is_check)
         VALUES
-        (:cart_id, :potions_id, :quantity, false);
+        (:cart_id, :potions_id, :quantity, :cost * :quantity, false);
         """
-        ),[{"cart_id" : cart_id, "potions_id" : potions_id, "quantity" : cart_item.quantity}])
+        ),[{"cart_id" : cart_id, "potions_id" : potions_id,"cost":cost, "quantity" : cart_item.quantity}])
               
     return "OK"
 
@@ -248,13 +325,12 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             """),[{"id":result[2]}]).fetchone()[0]
 
             price = result[1] * quantity
-            
             connection.execute(sqlalchemy.text(
             """
             INSERT INTO gold_ledgers
             (gold)
             VALUES
-            (:gold)
+            (:gold);
             """), [{"gold" : price}])
             
             result = connection.execute(sqlalchemy.text(
