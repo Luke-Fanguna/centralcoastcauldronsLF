@@ -21,7 +21,7 @@ class PotionInventory(BaseModel):
 
 @router.post("/deliver")
 def post_deliver_bottles(potions_delivered: list[PotionInventory]):
-
+    print(potions_delivered)
     with db.engine.begin() as connection:
         
         # additional_potions = sum(potion.quantity for potion in potions_delivered)
@@ -96,7 +96,6 @@ def get_bottle_plan():
     out = []
     for pot_type in pot_table:
         if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-            print(barrels)
             result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
             if sum(result) != 0:
                 quantity = min([x for x in result if x != 0])
@@ -108,4 +107,5 @@ def get_bottle_plan():
                 )
                 result = [x * quantity for x in pot_type]
                 barrels = [a - b for a, b in zip(barrels, result)]
+    print(out)
     return out
