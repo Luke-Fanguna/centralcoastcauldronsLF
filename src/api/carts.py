@@ -331,6 +331,14 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             WHERE potion_id = :id
             """),[{"id":result[2]}]).fetchone()[0]
 
+            connection.execute(sqlalchemy.text(
+            """
+            INSERT INTO potions_ledgers
+            (potion_id,quantity)
+            VALUES
+            (:id,:quantity)                                    
+            """),[{"id":id,"quantity":-quantity}])
+            
             price = result[1] * quantity
             connection.execute(sqlalchemy.text(
             """
