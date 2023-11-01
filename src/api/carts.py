@@ -153,7 +153,11 @@ def search_orders(
         if sort_order == "desc":
             info.reverse()
         
+        if search_page == '':
+            search_page = 1
+        
         n = int(search_page) * 5
+            
         if len(info) > n:
             a = n - 5
             b = n
