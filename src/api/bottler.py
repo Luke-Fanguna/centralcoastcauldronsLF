@@ -5,7 +5,7 @@ from enum import Enum
 from pydantic import BaseModel
 from src.api import auth
 import ast
-
+import json
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
 
@@ -94,20 +94,26 @@ def get_bottle_plan():
     pot_table = [list(ast.literal_eval(x[0])) for x in pot_table]
 
     out = []
-    for pot_type in pot_table:
-        print("potion type:",pot_type)        
-        print("barrels:",barrels)
-        if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-            result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
-            if sum(result) != 0:
-                quantity = min([x for x in result if x != 0])
-                out.append(
-                {
-                    "potion_type": pot_type,
-                    "quantity": quantity
-                }
-                )
-                result = [x * quantity for x in pot_type]
-                barrels = [a - b for a, b in zip(barrels, result)]
-    print(out)
+    possible = True
+    while possible:
+        for pot_type in pot_table:
+            print("potion type:",pot_type)        
+            print("barrels:",barrels)
+            if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
+                found = False
+                for entry in out:
+                    if entry["potion_type"] == pot_type:
+                        entry["quantity"] += 1
+                        found = True
+                        break
+                if not found:
+                    out.append({
+                        "potion_type": pot_type,
+                        "quantity": 1
+                    })
+                barrels = [x - y for x, y in zip(barrels, pot_type)]
+            else:
+                possible = False
+    json_string = json.dumps(out, indent=4)
+    print(json_string)
     return out
