@@ -83,6 +83,8 @@ def get_bottle_plan():
         ORDER BY red_ml, green_ml, blue_ml, evil_ml
         """)).fetchone()
         barrels = list(barrels)
+    if barrels[0] == None:
+        return []
         
     # access potions_table to see what we have/need to be stocked
     with db.engine.begin() as connection:

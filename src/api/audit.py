@@ -36,6 +36,10 @@ def get_inventory():
         """
         )).fetchone()
         print(ml)
+        if ml[0] is None:
+            ml = 0
+        else:
+            ml = sum(ml)
         
         gold = connection.execute(sqlalchemy.text(
         """
@@ -46,10 +50,10 @@ def get_inventory():
         )).fetchone()[0]
 
     print("potions", potions)
-    print("ml",sum(ml))
+    print("ml",ml)
     print("gold",gold)
 
-    return {"number_of_potions": potions, "ml_in_barrels": sum(ml), "gold": gold}
+    return {"number_of_potions": potions, "ml_in_barrels": ml, "gold": gold}
     
 
 class Result(BaseModel):
