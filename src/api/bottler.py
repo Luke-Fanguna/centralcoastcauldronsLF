@@ -95,8 +95,8 @@ def get_bottle_plan():
 
     out = []
     for pot_type in pot_table:
-        print(pot_type)        
-        print(barrels)
+        print("potion type:",pot_type)        
+        print("barrels:",barrels)
         if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
             result = [a // b if b != 0 else 0 for a, b in zip(barrels, pot_type)]
             if sum(result) != 0:
