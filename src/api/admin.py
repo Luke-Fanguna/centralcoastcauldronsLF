@@ -23,18 +23,6 @@ def reset():
         TRUNCATE TABLE ml_ledgers, carts_table, gold_ledgers, potions_ledgers CASCADE;
         """
         ))
-        connection.execute(sqlalchemy.text(
-        """
-        INSERT INTO ml_ledgers
-        (red_ml,green_ml,blue_ml,evil_ml)
-        VALUES
-        (:red_ml,:green_ml,:blue_ml,:evil_ml);
-        INSERT INTO gold_ledgers
-        (gold)
-        VALUES
-        (100);
-        """
-        ),[{"red_ml":100,"green_ml":100,"blue_ml":100,"evil_ml":100}])
     return "OK"
 
 
