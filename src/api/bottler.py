@@ -100,21 +100,32 @@ def get_bottle_plan():
     print(pot_table)
     while sum(barrels) != 0:
         for pot_type in pot_table:
-            print("potion type:",pot_type)        
-            print("barrels:",barrels)
-            if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
-                found = False
-                for entry in out:
-                    if entry["potion_type"] == pot_type:
-                        entry["quantity"] += 1
-                        found = True
-                        break
-                if not found:
-                    out.append({
-                        "potion_type": pot_type,
-                        "quantity": 1
-                    })
-                barrels = [x - y for x, y in zip(barrels, pot_type)]
+            with db.engine.begin():
+                quantity = connection.execute(sqlalchemy.text(
+                """
+                SELECT 
+                    SUM(quantity)
+                FROM potion_ledgers
+                WHERE type = :pot_type;
+                """
+                ),[{"pot_type":str(pot_type)}]).fetchone()[0]
+                if quantity == None:
+                    quantity = 0
+
+            if quantity < 10:
+                if pot_type[0] <= barrels[0] and pot_type[1] <= barrels[1] and pot_type[2] <= barrels[2] and pot_type[3] <= barrels[3]:
+                    found = False
+                    for entry in out:
+                        if entry["potion_type"] == pot_type:
+                            entry["quantity"] += 1
+                            found = True
+                            break
+                    if not found:
+                        out.append({
+                            "potion_type": pot_type,
+                            "quantity": 1
+                        })
+                    barrels = [x - y for x, y in zip(barrels, pot_type)]
     json_string = json.dumps(out, indent=4)
     print(json_string)
     return out
