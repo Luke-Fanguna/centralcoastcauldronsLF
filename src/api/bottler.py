@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from src.api import auth
 import ast
 import json
+import random
 # always mix potions
 # 500ml a barrel, 100ml a potion, and 30g a barrel
 
@@ -94,7 +95,7 @@ def get_bottle_plan():
         FROM potions_table
         """)).fetchall()
     pot_table = [list(ast.literal_eval(x[0])) for x in pot_table]
-
+    pot_table = random.shuffle(pot_table)
     out = []
     print(pot_table)
     while sum(barrels) != 0:
