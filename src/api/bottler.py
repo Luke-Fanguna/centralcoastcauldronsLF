@@ -96,8 +96,8 @@ def get_bottle_plan():
     pot_table = [list(ast.literal_eval(x[0])) for x in pot_table]
 
     out = []
-    possible = True
-    while possible:
+    print(pot_table)
+    while sum(barrels) != 0:
         for pot_type in pot_table:
             print("potion type:",pot_type)        
             print("barrels:",barrels)
@@ -114,8 +114,6 @@ def get_bottle_plan():
                         "quantity": 1
                     })
                 barrels = [x - y for x, y in zip(barrels, pot_type)]
-            else:
-                possible = False
     json_string = json.dumps(out, indent=4)
     print(json_string)
     return out
