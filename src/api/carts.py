@@ -168,7 +168,7 @@ def search_orders(
         # customer, q, name, price, time
         for i in range(a,b):
             print(info[i])
-            time = info[i][4].strftime("%m/%d/%Y, %I:%M:%S %p")
+            time = info[i][4] #.strftime("%m/%d/%Y, %I:%M:%S %p")
             out.append([{
                 "line_item_id":i+1,                      
                 "item_sku":str(info[i][1]) + " " + str(info[i][2]),
