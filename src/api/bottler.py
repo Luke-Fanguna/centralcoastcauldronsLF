@@ -99,15 +99,23 @@ def get_bottle_plan():
     print(pot_table)
     while sum(barrels) != 0:
         for pot_type in pot_table:
-            with db.engine.begin():
+            with db.engine.begin() as connection:
+                id = connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                    id
+                FROM potions_table
+                WHERE type = :pot_type;
+                """
+                ),({"pot_type":str(pot_type)})).fetchone()[0]
                 quantity = connection.execute(sqlalchemy.text(
                 """
                 SELECT 
                     SUM(quantity)
-                FROM potion_ledgers
-                WHERE type = :pot_type;
+                FROM potions_ledgers
+                WHERE id = :id;
                 """
-                ),[{"pot_type":str(pot_type)}]).fetchone()[0]
+                ),[{"id":id}]).fetchone()[0]
                 if quantity == None:
                     quantity = 0
 

@@ -245,8 +245,10 @@ def get_cart(cart_id: int):
             sqlalchemy.text("""
             SELECT * FROM carts_items_table
             WHERE cart_id = :cart_id;
-            """),[{"cart_id" : cart_id}])
-        
+            """),[{"cart_id" : cart_id}]).fetchall()
+    print(result)
+    if len(result) == 0:
+        return []
     for i in result:
         quantity = i[3]
         with db.engine.begin() as connection:
@@ -275,7 +277,7 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         WHERE sku = :sku
         ORDER BY id, cost;
         """
-        ),[{"sku" : item_sku}])
+        ),[{"sku" : item_sku}]).fetchone()
         
         potions_id = result[0]
         cost = result[1]
@@ -283,9 +285,9 @@ def set_item_quantity(cart_id: int, item_sku: str, cart_item: CartItem):
         connection.execute(sqlalchemy.text(
         """
         INSERT INTO carts_items_table
-        (cart_id, potions_id, quantity, total, is_check)
+        (cart_id, potions_id, quantity, is_check)
         VALUES
-        (:cart_id, :potions_id, :quantity, :cost * :quantity, false);
+        (:cart_id, :potions_id, :quantity, false);
         """
         ),[{"cart_id" : cart_id, "potions_id" : potions_id,"cost":cost, "quantity" : cart_item.quantity}])
               
@@ -341,7 +343,7 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
             (potion_id,quantity)
             VALUES
             (:id,:quantity)                                    
-            """),[{"id":id,"quantity":-quantity}])
+            """),[{"id": result[2],"quantity":-quantity}])
             
             price = result[1] * quantity
             connection.execute(sqlalchemy.text(
