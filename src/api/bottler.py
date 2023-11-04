@@ -95,7 +95,6 @@ def get_bottle_plan():
         FROM potions_table
         """)).fetchall()
     pot_table = [list(ast.literal_eval(x[0])) for x in pot_table]
-    pot_table = random.shuffle(pot_table)
     out = []
     print(pot_table)
     while sum(barrels) != 0:
