@@ -329,13 +329,13 @@ def checkout(cart_id: int, cart_checkout: CartCheckout):
                 ),[{"cart_id":cart_id}]).fetchone()
             
             print(result)
-                        
+
             quantity = connection.execute(sqlalchemy.text("""
             SELECT 
                 sum(quantity)
-            FROM potions_ledgers
-            WHERE potion_id = :id
-            """),[{"id":result[2]}]).fetchone()[0]
+            FROM carts_items_table
+            WHERE potions_id = :id AND cart_id = :cart_id;
+            """),[{"id":result[2],"cart_id":cart_id}]).fetchone()[0]
 
             connection.execute(sqlalchemy.text(
             """
