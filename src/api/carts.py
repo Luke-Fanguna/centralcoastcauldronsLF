@@ -169,14 +169,14 @@ def search_orders(
         for i in range(a,b):
             print(info[i])
             time = info[i][4] #.strftime("%m/%d/%Y, %I:%M:%S %p")
-            out.append([{
+            out.append({
                 "line_item_id":i+1,                      
                 "item_sku":str(info[i][1]) + " " + str(info[i][2]),
                 "customer_name":info[i][0],              
                 "line_item_total":info[i][3] * info[i][1],
                 "timestamp":time,
                 }
-                ])
+                )
         if int(search_page) == 1:
             prev = ""
             next = "2"
