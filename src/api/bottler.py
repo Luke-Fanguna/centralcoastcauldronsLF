@@ -98,6 +98,7 @@ def get_bottle_plan():
     out = []
     print(pot_table)
     while sum(barrels) != 0:
+        print(barrels)
         for pot_type in pot_table:
             with db.engine.begin() as connection:
                 id = connection.execute(sqlalchemy.text(

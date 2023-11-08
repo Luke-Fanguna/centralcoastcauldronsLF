@@ -32,6 +32,7 @@ def search_orders(
     sort_col: search_sort_options = search_sort_options.timestamp,
     sort_order: search_sort_order = search_sort_order.desc,
 ):
+    info = []
     with db.engine.begin() as connection:
         if customer_name != "" and potion_sku != "":
             print("customer name:",customer)
@@ -50,54 +51,57 @@ def search_orders(
             SELECT
                 id
             FROM carts_table
-            WHERE customer = :customer
+            WHERE LOWER(customer) LIKE LOWER(:customer)
             """
-            ),[{"customer":customer_name}]).scalar_one()
-            
-            info = connection.execute(sqlalchemy.text(
-            """
-            SELECT
-                customer.customer AS name,
-                cart.quantity AS quantity,
-                potions.name AS potion_name,
-                potions.cost AS cost,
-                cart.created_at AS timestamp
-            FROM carts_items_table AS cart
-            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
-            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            WHERE customer.id = :cart_id AND potions.id = :potions_id
-            ORDER BY name, quantity, cost, potion_name, timestamp;
-            """
-            ),[{"potions_id":potion_id,"cart_id":cust_id}]).fetchall()
+            ),[{"customer":'%'+customer_name+'%'}]).fetchall()
+            for c in cust_id:
+                info = connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                    customer.customer AS name,
+                    cart.quantity AS quantity,
+                    potions.name AS potion_name,
+                    potions.cost AS cost,
+                    cart.created_at AS timestamp
+                FROM carts_items_table AS cart
+                INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+                INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+                WHERE customer.id = :cart_id AND potions.id = :potions_id
+                ORDER BY name, quantity, cost, potion_name, timestamp;
+                """
+                ),[{"potions_id":potion_id,"cart_id":c}]).fetchall()
         elif customer_name != "" and potion_sku == "":
-            print("customer name:",customer)
+            print("customer name:",customer_name)
             print("potion_sku:",potion_sku)
             cust_id = connection.execute(sqlalchemy.text(
             """
             SELECT
                 id
             FROM carts_table
-            WHERE customer = :customer
+            WHERE LOWER(customer) LIKE LOWER(:customer)
             """
-            ),[{"customer":customer_name}]).scalar_one()
-            
-            info = connection.execute(sqlalchemy.text(
-            """
-            SELECT
-                customer.customer AS name,
-                cart.quantity AS quantity,
-                potions.name AS potion_name,
-                potions.cost AS cost,
-                cart.created_at AS timestamp
-            FROM carts_items_table AS cart
-            INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
-            INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
-            WHERE customer.id = :cart_id
-            ORDER BY name, quantity, cost, potion_name, timestamp;
-            """
-            ),[{"cart_id":cust_id}]).fetchall()
+            ),[{"customer":'%'+customer_name+'%'}]).fetchall()
+            print("before sort",cust_id)
+            cust_id = [x[0] for x in cust_id]
+            print("after",cust_id)
+            for c in cust_id:
+                info.append(connection.execute(sqlalchemy.text(
+                """
+                SELECT
+                    customer.customer AS name,
+                    cart.quantity AS quantity,
+                    potions.name AS potion_name,
+                    potions.cost AS cost,
+                    cart.created_at AS timestamp
+                FROM carts_items_table AS cart
+                INNER JOIN carts_table AS customer ON cart.cart_id = customer.id
+                INNER JOIN potions_table AS potions ON cart.potions_id = potions.id
+                WHERE customer.id = :cart_id
+                ORDER BY name, quantity, cost, potion_name, timestamp;
+                """
+                ),[{"cart_id":c}]).fetchall())
         elif customer == "" and potion_sku != "":
-            print("customer name:",customer)
+            print("customer name:",customer_name)
             print("potion_sku:",potion_sku)
             potion_id = connection.execute(sqlalchemy.text(    
             """
@@ -124,7 +128,7 @@ def search_orders(
             """
             ),[{"potions_id":potion_id}]).fetchall()
         else:
-            print("customer name:",customer)
+            print("customer name:",customer_name)
             print("potion_sku:",potion_sku)
             info = connection.execute(sqlalchemy.text(
             """
@@ -140,7 +144,7 @@ def search_orders(
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             )).fetchall()
-        print(info)
+        print(info,type(info))
         if sort_col == "customer_name":
             info = sorted(info, key=lambda x: x[0])
         elif sort_col == "item_sku":
