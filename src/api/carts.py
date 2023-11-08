@@ -69,7 +69,7 @@ def search_orders(
                 WHERE customer.id = :cart_id AND potions.id = :potions_id
                 ORDER BY name, quantity, cost, potion_name, timestamp;
                 """
-                ),[{"potions_id":potion_id,"cart_id":c}]).fetchall()
+                ),[{"potions_id":potion_id,"cart_id":c[0]}]).fetchall()
         elif customer_name != "" and potion_sku == "":
             print("customer name:",customer_name)
             print("potion_sku:",potion_sku)
@@ -80,7 +80,7 @@ def search_orders(
             FROM carts_table
             WHERE LOWER(customer) LIKE LOWER(:customer)
             """
-            ),[{"customer":customer_name+'%'}]).fetchall()
+            ),[{"customer":'%'+customer_name+'%'}]).fetchall()
 
             cust_id = [x[0] for x in cust_id]
 
@@ -101,7 +101,6 @@ def search_orders(
                 """
                 ),[{"cart_id":c}]).fetchall())
         elif customer == "" and potion_sku != "":
-            print("customer name:",customer_name)
             print("potion_sku:",potion_sku)
             potion_id = connection.execute(sqlalchemy.text(    
             """
@@ -128,8 +127,6 @@ def search_orders(
             """
             ),[{"potions_id":potion_id}]).fetchall()
         else:
-            print("customer name:",customer_name)
-            print("potion_sku:",potion_sku)
             info = connection.execute(sqlalchemy.text(
             """
             SELECT
@@ -144,8 +141,12 @@ def search_orders(
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             )).fetchall()
-        info = [list(x[0]) for x in info if x]
-
+        print(info)
+        if len(info) > 1:
+            info = [list(x[0]) for x in info if x]
+        else:
+            info = [list(info[0][0])]
+        print(info)
         if sort_col == "customer_name":
             info = sorted(info, key=lambda x: x[0])
         elif sort_col == "item_sku":
@@ -154,7 +155,6 @@ def search_orders(
             info = sorted(info, key=lambda x: x[3])
         elif sort_col == "timestamp":
             info = sorted(info, key=lambda x: x[4])
-        
         if sort_order == "desc":
             info.reverse()
         
@@ -162,17 +162,24 @@ def search_orders(
             search_page = 1
         
         n = int(search_page) * 5
-            
+        
         if len(info) > n:
             a = n - 5
             b = n
+        elif len(info) == 1:
+            a = 0
+            b = 1
         else:
             a = n - 5
             b = len(info)
+        
+        print("search page:",n)
+        print('a:',a,'b:',b)
+        
         out = []
         # customer, q, name, price, time
         for i in range(a,b):
-
+            print(info[i][3],info[i][1])
             time = info[i][4] #.strftime("%m/%d/%Y, %I:%M:%S %p")
             out.append({
                 "line_item_id":i+1,                      
