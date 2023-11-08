@@ -80,10 +80,10 @@ def search_orders(
             FROM carts_table
             WHERE LOWER(customer) LIKE LOWER(:customer)
             """
-            ),[{"customer":'%'+customer_name+'%'}]).fetchall()
-            print("before sort",cust_id)
+            ),[{"customer":customer_name+'%'}]).fetchall()
+
             cust_id = [x[0] for x in cust_id]
-            print("after",cust_id)
+
             for c in cust_id:
                 info.append(connection.execute(sqlalchemy.text(
                 """
@@ -144,7 +144,8 @@ def search_orders(
             ORDER BY name, quantity, cost, potion_name, timestamp;
             """
             )).fetchall()
-        print(info,type(info))
+        info = [list(x[0]) for x in info if x]
+
         if sort_col == "customer_name":
             info = sorted(info, key=lambda x: x[0])
         elif sort_col == "item_sku":
@@ -171,7 +172,7 @@ def search_orders(
         out = []
         # customer, q, name, price, time
         for i in range(a,b):
-            print(info[i])
+
             time = info[i][4] #.strftime("%m/%d/%Y, %I:%M:%S %p")
             out.append({
                 "line_item_id":i+1,                      
