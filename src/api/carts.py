@@ -143,7 +143,7 @@ def search_orders(
             )).fetchall()
         print(info)
         if len(info) > 1:
-            info = [list(x[0]) for x in info if x]
+            info = [list(x) for x in info if x]
         else:
             info = [list(info[0][0])]
         print(info)
