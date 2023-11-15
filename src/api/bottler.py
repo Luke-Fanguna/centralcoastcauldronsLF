@@ -100,8 +100,6 @@ def get_bottle_plan():
     while sum(barrels) != 0:
         print(barrels)
         for pot_type in pot_table:
-            if pot_type == [0, 50, 50, 0] or pot_type == [50,0,0,50]:
-                continue
             with db.engine.begin() as connection:
                 id = connection.execute(sqlalchemy.text(
                 """
