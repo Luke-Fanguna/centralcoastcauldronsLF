@@ -92,7 +92,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     print("wallet:",wallet)
     for barrel in wholesale_catalog:
         if barrel.potion_type == [1,0,0,0]:
-            if  barrels[0] < 100 and (barrel.price * barrel.quantity) < wallet:
+            if  (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -103,7 +103,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,1,0,0]:
-            if barrels[1] < 100 and (barrel.price * barrel.quantity) < wallet:
+            if (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -114,7 +114,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,1,0]:
-            if barrels[2] < 100 and (barrel.price * barrel.quantity) < wallet:
+            if (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -125,7 +125,7 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                 gold += barrel.price
                 wallet -= barrel.price
         elif barrel.potion_type == [0,0,0,1]:
-            if barrels[3] < 100 and (barrel.price * barrel.quantity) < wallet:
+            if (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
