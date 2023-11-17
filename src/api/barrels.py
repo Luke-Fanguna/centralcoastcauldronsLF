@@ -90,9 +90,12 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
     purchased = []
     print("barrels:",barrels)
     print("wallet:",wallet)
+    
+    
     for barrel in wholesale_catalog:
+        
         if barrel.potion_type == [1,0,0,0]:
-            if barrels[0] <= 5000 and   (barrel.price * barrel.quantity) < wallet:
+            if barrels[0] <= 5000 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
                     {
                         "sku": barrel.sku,
@@ -100,8 +103,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     }
                 )
                 barrels[0] += barrel.ml_per_barrel
-                gold += barrel.price
-                wallet -= barrel.price
+                gold += (barrel.price * barrel.quantity)
+                wallet -= (barrel.price * barrel.quantity)
         elif barrel.potion_type == [0,1,0,0]:
             if barrels[1] <= 5000 and  (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
@@ -111,8 +114,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     }
                 )
                 barrels[1] += barrel.ml_per_barrel
-                gold += barrel.price
-                wallet -= barrel.price
+                gold += (barrel.price * barrel.quantity)
+                wallet -= (barrel.price * barrel.quantity)
         elif barrel.potion_type == [0,0,1,0]:
             if barrels[2] <= 5000 and  (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
@@ -122,8 +125,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     }
                 )
                 barrels[2] += barrel.ml_per_barrel
-                gold += barrel.price
-                wallet -= barrel.price
+                gold += (barrel.price * barrel.quantity)
+                wallet -= (barrel.price * barrel.quantity)
         elif barrel.potion_type == [0,0,0,1]:
             if barrels[3] <= 5000 and (barrel.price * barrel.quantity) < wallet:
                 purchased.append(
@@ -133,8 +136,8 @@ def get_wholesale_purchase_plan(wholesale_catalog: list[Barrel]):
                     }
                 )
                 barrels[3] += barrel.ml_per_barrel
-                gold += barrel.price
-                wallet -= barrel.price
+                gold += (barrel.price * barrel.quantity)
+                wallet -= (barrel.price * barrel.quantity)
     print("gold after purchasing: ",wallet)
     print("cost of barrels: ", gold)
     print("how much money i have: ", cash)
